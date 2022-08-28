@@ -1,12 +1,26 @@
 public class Client {
+    /// <summary>
+    /// Function to download the release index of a repository
+    /// (<paramref name="user"/>, <paramref name="repository"/>)
+    /// </summary>
+    /// <param name="user">The github username</param>
+    /// <param name="repository">The github repository name</param>
+    /// <returns>True if the download succedeed</returns>
     public static bool DownloadIndex(string user, string repository) {
         string url = "https://raw.githubusercontent.com/" + user + "/" + repository + "/main/github-updater." + repository + ".json";
         string tempFile = "index/repositories/github-updater." + repository + ".temp.json";
         string file = "index/repositories/github-updater." + repository + ".json";
+        if(!Directory.Exists("index/repositories")) {
+            try {Directory.CreateDirectory("index/repositories");}
+            catch(Exception e) {
+                Logger.WriteLine("Error creating folder for repositories indexes, exception: " + e, ConsoleColor.Red);
+                return false;
+            }
+        }
         try {
             using (var client = new HttpClient()) {
                 using (var s = client.GetStreamAsync(url)) {
-                    using (var fs = new FileStream("index/repositories/github-updater." + repository + ".temp.json", FileMode.Create)) {
+                    using (var fs = new FileStream(tempFile, FileMode.Create)) {
                         s.Result.CopyTo(fs);
                     }
                 }
@@ -20,7 +34,8 @@ public class Client {
         }
         catch(Exception e) {
             Logger.WriteLine("  Error dowloading index from " + user + "/" + repository + ", exception: " + e, ConsoleColor.Red);
-            File.Delete(tempFile);
+            try {File.Delete(tempFile);}
+            catch(Exception) {}
             return false;
         }
     }

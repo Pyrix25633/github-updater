@@ -26,7 +26,7 @@ public class Logger {
     }
     /// <summary>
     /// Function to clear the last console line
-    ///(<paramref name="line"/>)
+    /// (<paramref name="line"/>)
     /// </summary>
     /// <param name="line">The line to remove, default 1</param>
     public static void RemoveLine(Int16 line = 1) {
@@ -35,6 +35,20 @@ public class Logger {
         for (Int32 i = 0; i < Console.WindowWidth; i++)
             Console.Write(" ");
         Console.SetCursorPosition(0, currentLineCursor - line);
+    }
+    /// <summary>
+    /// Function to input a string
+    /// </summary>
+    /// <returns>The string, not null</returns>
+    public static string ReadString() {
+        string? s;
+        do {
+            s = Console.ReadLine();
+            if(s == null) {
+                Write("The input cannot be null. New input: ", ConsoleColor.Red);
+            }
+        } while(s == null);
+        return s;
     }
     /// <summary>
     /// Function to get the string time
@@ -108,7 +122,13 @@ public class Logger {
         MiBytes %= unit;
         return GiBytes.ToString() + "GiB&" + MiBytes.ToString() + "MiB";
     }
-
+    /// <summary>
+    /// Function know if the local version is outdated
+    /// (<paramref name="latest"/>, <paramref name="local"/>)
+    /// </summary>
+    /// <param name="latest">The latest version</param>
+    /// <param name="local">The local version</param>
+    /// <returns>True if it is outdated: e.g. local 1.3.7, latest 1.5.3</returns>
     public static bool IsOutdated(string? latest, string? local) {
         if(latest == null || local == null) {
             Logger.WriteLine("Error: local or latest version is null", ConsoleColor.Red);
