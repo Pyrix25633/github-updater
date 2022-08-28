@@ -8,7 +8,14 @@
         {
             "repository": "backup-utility-cs",
             "user": "Pyrix25633",
+            "path": "test",
             "version": "1.5.4"
+        },
+        {
+            "repository": "risc-sim",
+            "user": "Pyrix25633",
+            "path": "test",
+            "version": "1.0.0"
         }
     ]
 }

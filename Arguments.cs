@@ -28,6 +28,10 @@ public class Arguments {
                 case "list":
                     command = Command.List;
                     break;
+                case "u":
+                case "update":
+                    command = Command.Update;
+                    break;
                 case "a":
                 case "add":
                     command = Command.Add;
@@ -49,5 +53,6 @@ public class Arguments {
 public enum Command {
     Help = 0,
     List = 1,
-    Add = 2
+    Update = 2,
+    Add = 3
 }

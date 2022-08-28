@@ -1,6 +1,6 @@
 .RECIPEPREFIX=>
 VERSION=0.1.0
-COMMAND=list
+COMMAND=update
 
 default:
 > clear

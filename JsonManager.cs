@@ -3,14 +3,25 @@ using Newtonsoft.Json;
 public class JsonManager {
     public static Repositories readRepositoriesIndex() {
         Repositories repositories = new Repositories();
-        Repositories? temp;
-        string fileContent = File.ReadAllText("index/github-updater.repositories.json");
-        temp = JsonConvert.DeserializeObject<Repositories>(fileContent);
-        if(temp != null) {
-            repositories = temp;
+        try {
+            Repositories? temp;
+            string fileContent = File.ReadAllText("index/github-updater.repositories.json");
+            temp = JsonConvert.DeserializeObject<Repositories>(fileContent);
+            if(temp != null && temp.updater != null && temp.updater.repository != null
+                && temp.updater.user != null && temp.updater.version != null) {
+                repositories = temp;
+            }
+            else {
+                throw(new Exception("Error while parsing repositories index"));
+            }
         }
-        else {
-            throw(new Exception("Error while parsing repositories index"));
+        catch(Exception e) {
+            Logger.WriteLine("Error while reading repositories index, exception: " + e, ConsoleColor.Red);
+            throw(new Exception());
+        }
+        //0 repositories found
+        if(repositories.repositories == null || repositories.repositories.Length == 0) {
+            Logger.WriteLine("0 External repositories found", ConsoleColor.Yellow);
         }
         return repositories;
     }
@@ -37,11 +48,13 @@ public class Repositories {
 public class Repository {
     public string? repository {get; set;}
     public string? user {get; set;}
+    public string? path {get; set;}
     public string? version {get; set;}
 }
 
 public class Index {
     public string? latest {get; set;}
+    public string[]? keep {get; set;}
     public Release[]? releases {get; set;}
 }
 
