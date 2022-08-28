@@ -1,5 +1,8 @@
 {
     "latest": "0.1.0",
+    "keep": [
+        "index/"
+    ],
     "versions": [
         {
             "tag": "0.1.0",
