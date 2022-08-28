@@ -1,0 +1,10 @@
+{
+    "latest": "0.1.0",
+    "versions": [
+        {
+            "tag": "0.1.0",
+            "linux": "github-updater-0.1.0-linux-x64.tar.gz",
+            "win": "github-updater-0.1.0-win-x64.zip"
+        }
+    ]
+}

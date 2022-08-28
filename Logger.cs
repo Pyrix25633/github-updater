@@ -108,4 +108,40 @@ public class Logger {
         MiBytes %= unit;
         return GiBytes.ToString() + "GiB&" + MiBytes.ToString() + "MiB";
     }
+
+    public static bool IsOutdated(string? latest, string? local) {
+        if(latest == null || local == null) {
+            Logger.WriteLine("Error: local or latest version is null", ConsoleColor.Red);
+            throw(new Exception("Null version"));
+        }
+        string[] latestSplitted = latest.Split(".");
+        string[] localSplitted = local.Split(".");
+        if((latestSplitted.Length == 3 && localSplitted.Length == 3) ||
+            (latestSplitted.Length == 4 && localSplitted.Length == 4)) {
+            int latestMajor = int.Parse(latestSplitted[0]);
+            int latestMinor = int.Parse(latestSplitted[1]);
+            int latestFix = int.Parse(latestSplitted[2]);
+            int localMajor = int.Parse(localSplitted[0]);
+            int localMinor = int.Parse(localSplitted[1]);
+            int localFix = int.Parse(localSplitted[2]);
+            if(latestMajor > localMajor) return true;
+            if(latestMajor == localMajor) {
+                if(latestMinor > localMinor) return true;
+                if(latestMinor == localMinor && latestFix > localFix) return true;
+            }
+            if(latestSplitted.Length == 4 && latestFix == localFix) {
+                int latestFix2 = int.Parse(latestSplitted[3]);
+                int localFix2 = int.Parse(localSplitted[3]);
+                if(latestFix2 > localFix2) return true;
+            }
+        }
+        else {
+            Logger.WriteLine("Error: latest or local version format is not correct! "
+                + "It must be N.N.N or N.N.N.N, where N is a one or more digits number, "
+                + "and the must have the same format: local 1.8.6 and latest 1.9.0.0 are not compatible formats",
+                ConsoleColor.Red);
+            throw(new Exception("Wrong version format"));
+        }
+        return false;
+    }
 }

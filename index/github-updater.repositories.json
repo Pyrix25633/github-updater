@@ -1,0 +1,14 @@
+{
+    "updater": {
+        "repository": "github-updater",
+        "user": "Pyrix25633",
+        "version": "0.1.0"
+    },
+    "repositories": [
+        {
+            "repository": "backup-utility-cs",
+            "user": "Pyrix25633",
+            "version": "1.5.4"
+        }
+    ]
+}

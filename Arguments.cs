@@ -24,6 +24,14 @@ public class Arguments {
                 case "help":
                     command = Command.Help;
                     break;
+                case "l":
+                case "list":
+                    command = Command.List;
+                    break;
+                case "a":
+                case "add":
+                    command = Command.Add;
+                    break;
                 case "--":
                     if(length == 1) {
                         errors = 255;
@@ -39,5 +47,7 @@ public class Arguments {
 }
 
 public enum Command {
-    Help = 0
+    Help = 0,
+    List = 1,
+    Add = 2
 }

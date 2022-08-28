@@ -2,5 +2,6 @@ bin/
 obj/
 transfer/docker
 test/
+index/repositories/
 *.log
 *.log.gz
