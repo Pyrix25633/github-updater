@@ -32,9 +32,9 @@ public class Arguments {
                 case "update":
                     command = Command.Update;
                     break;
-                case "a":
-                case "add":
-                    command = Command.Add;
+                case "i":
+                case "install":
+                    command = Command.Install;
                     break;
                 case "--":
                     if(length == 1) {
@@ -54,5 +54,5 @@ public enum Command {
     Help = 0,
     List = 1,
     Update = 2,
-    Add = 3
+    Install = 3
 }

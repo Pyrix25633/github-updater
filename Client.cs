@@ -39,4 +39,19 @@ public class Client {
             return false;
         }
     }
+    public static void DownloadRelease(Repository repository, Index index) {
+        if(repository.repository == null || repository.user == null)
+            throw(new Exception("Null repository exception"));
+        //Checking installation path
+        if(repository.path == null) repository.path = "";
+        else {
+            if(!Directory.Exists(repository.path)) {
+                try {
+                    Directory.CreateDirectory(repository.path);
+                }
+                catch(Exception e) {throw(new Exception("Error while attempting directory creation, exception: " + e));}
+            }
+        }
+        //TODO
+    }
 }

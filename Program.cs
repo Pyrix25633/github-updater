@@ -26,11 +26,7 @@ public class Program {
         switch(arguments.command) {
             case Command.Help:
                 //Printing help message
-                Logger.WriteLine("Usage: github-updater [COMMAND]", ConsoleColor.Blue);
-                Logger.WriteLine("Commands:", ConsoleColor.Green);
-                Logger.WriteLine("  h, help                           Prints help message     ", ConsoleColor.Yellow);
-                Logger.WriteLine("  l, list                           Lists all repositories  ", ConsoleColor.Yellow);
-                Logger.WriteLine("  a, add                            Adds a repository       ", ConsoleColor.Yellow);
+                Help();
                 break;
             case Command.List:
                 //Listing local repositories
@@ -40,11 +36,18 @@ public class Program {
                 //Updating indexes
                 Update();
                 break;
-            case Command.Add:
+            case Command.Install:
                 //Adding a repository
-                Add();
+                Install();
                 break;
         }
+    }
+    public static void Help() {
+        Logger.WriteLine("Usage: github-updater [COMMAND]", ConsoleColor.Blue);
+        Logger.WriteLine("Commands:", ConsoleColor.Green);
+        Logger.WriteLine("  h, help                           Prints help message     ", ConsoleColor.Yellow);
+        Logger.WriteLine("  l, list                           Lists all repositories  ", ConsoleColor.Yellow);
+        Logger.WriteLine("  i, install                        Install a release       ", ConsoleColor.Yellow);
     }
     public static void List() {
         Repositories repositories;
@@ -65,10 +68,17 @@ public class Program {
         Logger.WriteLine("  Path:           " + repositories.updater.path, ConsoleColor.Cyan);
         Logger.WriteLine("  Latest version: " + index.latest, ConsoleColor.Cyan);
         Logger.Write("  Local version:  " + repositories.updater.version + " ", ConsoleColor.Cyan);
-        if(Logger.IsOutdated(index.latest, repositories.updater.version))
+        Version latest = new Version(), local = new Version();
+        try {
+            latest = new Version(index.latest); local = new Version(repositories.updater.version);
+            if(Version.IsOutdated(latest, local))
             Logger.WriteLine("✗ Outdated", ConsoleColor.Red);
         else
             Logger.WriteLine("✓ Up-to-date", ConsoleColor.Green);
+        }
+        catch(Exception e) {
+            Logger.WriteLine("Error while parsing version, exception: " + e, ConsoleColor.Red);
+        }
         Logger.WriteLine();
         foreach(Repository item in repositories.repositories) {
             if(item.repository != null) {
@@ -78,10 +88,16 @@ public class Program {
                 Logger.WriteLine("  Path:           " + item.path, ConsoleColor.Blue);
                 Logger.WriteLine("  Latest version: " + index.latest, ConsoleColor.Blue);
                 Logger.Write("  Local version:  " + item.version + " ", ConsoleColor.Blue);
-                if(Logger.IsOutdated(index.latest, item.version))
-                    Logger.WriteLine("✗ Outdated", ConsoleColor.Red);
-                else
-                    Logger.WriteLine("✓ Up-to-date", ConsoleColor.Green);
+                try {
+                    latest = new Version(index.latest); local = new Version(repositories.updater.version);
+                    if(Version.IsOutdated(latest, local))
+                        Logger.WriteLine("✗ Outdated", ConsoleColor.Red);
+                    else
+                        Logger.WriteLine("✓ Up-to-date", ConsoleColor.Green);
+                }
+                catch(Exception e) {
+                    Logger.WriteLine("Error while parsing version, exception: " + e, ConsoleColor.Red);
+                }
                 Logger.WriteLine();
             }
         }
@@ -110,7 +126,7 @@ public class Program {
             }
         }
     }
-    public static void Add() {
+    public static void Install() {
         //Asking repository, user, path and version
         Logger.Write("Insert the repository name: ", ConsoleColor.Blue);
         string r = Logger.ReadString();
