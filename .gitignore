@@ -3,5 +3,7 @@ obj/
 transfer/docker
 test/
 index/repositories/
-*.log
-*.log.gz
+*.dll
+*.pdb
+*.deps.json
+*.runtimeconfig.json

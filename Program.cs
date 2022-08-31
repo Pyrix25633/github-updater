@@ -54,7 +54,10 @@ public class Program {
         Index index;
         //Get repositories index (github-updater.repositories.json)
         try {repositories = JsonManager.readRepositoriesIndex();}
-        catch(Exception) {return;}
+        catch(Exception e) {
+            Logger.WriteLine("Error while parsing repositories index, exception: " + e, ConsoleColor.Red);
+            return;
+        }
         if(repositories.repositories == null) return;
         //1 or more repositories, listing versions
         Logger.Write(repositories.repositories.Length.ToString() + " External repositor"
@@ -89,7 +92,7 @@ public class Program {
                 Logger.WriteLine("  Latest version: " + index.latest, ConsoleColor.Blue);
                 Logger.Write("  Local version:  " + item.version + " ", ConsoleColor.Blue);
                 try {
-                    latest = new Version(index.latest); local = new Version(repositories.updater.version);
+                    latest = new Version(index.latest); local = new Version(item.version);
                     if(Version.IsOutdated(latest, local))
                         Logger.WriteLine("✗ Outdated", ConsoleColor.Red);
                     else

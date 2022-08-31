@@ -5,7 +5,7 @@ public class JsonManager {
         Repositories repositories = new Repositories();
         try {
             Repositories? temp;
-            string fileContent = File.ReadAllText("index/github-updater.repositories.json");
+            string fileContent = File.ReadAllText(Client.GetFullPathFromExecutable("index/github-updater.repositories.json"));
             temp = JsonConvert.DeserializeObject<Repositories>(fileContent);
             if(temp != null && temp.updater != null && temp.updater.repository != null
                 && temp.updater.user != null && temp.updater.version != null) {
@@ -28,7 +28,8 @@ public class JsonManager {
     public static Index readRepositoryIndex(string repository) {
         Index index = new Index();
         Index? temp;
-        string fileContent = File.ReadAllText("index/repositories/github-updater." + repository + ".json");
+        string fileContent = File.ReadAllText(
+            Client.GetFullPathFromExecutable("index/repositories/github-updater." + repository + ".json"));
         temp = JsonConvert.DeserializeObject<Index>(fileContent);
         if(temp != null) {
             index = temp;

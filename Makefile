@@ -29,7 +29,12 @@ run-dotnet-debug:
 > dotnet ./transfer/docker/debug/github-updater.dll -- $(COMMAND)
 
 run-dotnet-local:
-> dotnet ./bin/debug/net6.0/github-updater.dll -- $(COMMAND)
+> cp ./bin/debug/net6.0/github-updater.dll ./
+> cp ./bin/debug/net6.0/github-updater.runtimeconfig.json ./
+> cp ./bin/debug/net6.0/github-updater.pdb ./
+> cp ./bin/debug/net6.0/github-updater.deps.json ./
+> cp ./bin/debug/net6.0/Newtonsoft.Json.dll ./
+> dotnet ./github-updater.dll -- $(COMMAND)
 
 run-dotnet-release:
 > ./transfer/docker/release/linux-x64/github-updater $(COMMAND)

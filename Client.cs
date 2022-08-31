@@ -1,3 +1,5 @@
+using System.Reflection;
+
 public class Client {
     /// <summary>
     /// Function to download the release index of a repository
@@ -8,10 +10,10 @@ public class Client {
     /// <returns>True if the download succedeed</returns>
     public static bool DownloadIndex(string user, string repository) {
         string url = "https://raw.githubusercontent.com/" + user + "/" + repository + "/main/github-updater." + repository + ".json";
-        string tempFile = "index/repositories/github-updater." + repository + ".temp.json";
-        string file = "index/repositories/github-updater." + repository + ".json";
+        string tempFile = GetFullPathFromExecutable("index/repositories/github-updater." + repository + ".temp.json");
+        string file = GetFullPathFromExecutable("index/repositories/github-updater." + repository + ".json");
         if(!Directory.Exists("index/repositories")) {
-            try {Directory.CreateDirectory("index/repositories");}
+            try {Directory.CreateDirectory(GetFullPathFromExecutable("index/repositories"));}
             catch(Exception e) {
                 Logger.WriteLine("Error creating folder for repositories indexes, exception: " + e, ConsoleColor.Red);
                 return false;
@@ -53,5 +55,14 @@ public class Client {
             }
         }
         //TODO
+    }
+    /// <summary>
+    /// Function to get the full path from the executable location
+    /// (<paramref name="path"/>)
+    /// </summary>
+    /// <param name="path">The relative path from the executable</param>
+    /// <returns>The full path</returns>
+    public static string GetFullPathFromExecutable(string path) {
+        return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + Path.DirectorySeparatorChar + path;
     }
 }
