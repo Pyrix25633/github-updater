@@ -7,5 +7,7 @@ COPY *.csproj ./
 COPY *.cs ./
 COPY launch-compilation.sh ./
 RUN chmod +x /app/launch-compilation.sh
+RUN dotnet add package Newtonsoft.Json
+RUN dotnet restore
 
 CMD [ "/app/launch-compilation.sh" ]
