@@ -3,6 +3,8 @@ obj/
 transfer/docker
 test/
 index/repositories/
+programs/
+github-updater.temp/
 *.dll
 *.pdb
 *.deps.json

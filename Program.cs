@@ -53,7 +53,7 @@ public class Program {
         Repositories repositories;
         Index index;
         //Get repositories index (github-updater.repositories.json)
-        try {repositories = JsonManager.readRepositoriesIndex();}
+        try {repositories = JsonManager.ReadRepositoriesIndex();}
         catch(Exception e) {
             Logger.WriteLine("Error while parsing repositories index, exception: " + e, ConsoleColor.Red);
             return;
@@ -65,7 +65,7 @@ public class Program {
         Logger.WriteLine("(The index is local and might be outdated)", ConsoleColor.Yellow);
         Logger.WriteLine();
         if(repositories.updater == null || repositories.updater.repository == null) return;
-        index = JsonManager.readRepositoryIndex(repositories.updater.repository);
+        index = JsonManager.ReadRepositoryIndex(repositories.updater.repository);
         Logger.WriteLine("  Repository:     " + repositories.updater.repository, ConsoleColor.Cyan);
         Logger.WriteLine("  User:           " + repositories.updater.user, ConsoleColor.Cyan);
         Logger.WriteLine("  Path:           " + repositories.updater.path, ConsoleColor.Cyan);
@@ -85,7 +85,7 @@ public class Program {
         Logger.WriteLine();
         foreach(Repository item in repositories.repositories) {
             if(item.repository != null) {
-                index = JsonManager.readRepositoryIndex(item.repository);
+                index = JsonManager.ReadRepositoryIndex(item.repository);
                 Logger.WriteLine("  Repository:     " + item.repository, ConsoleColor.Blue);
                 Logger.WriteLine("  User:           " + item.user, ConsoleColor.Blue);
                 Logger.WriteLine("  Path:           " + item.path, ConsoleColor.Blue);
@@ -108,7 +108,7 @@ public class Program {
     public static void Update() {
         Repositories repositories;
         //Get repositories index (github-updater.repositories.json)
-        try {repositories = JsonManager.readRepositoriesIndex();}
+        try {repositories = JsonManager.ReadRepositoriesIndex();}
         catch(Exception) {return;}
         if(repositories.repositories == null) return;
         //1 or more repositories, listing versions
@@ -131,26 +131,32 @@ public class Program {
     }
     public static void Install() {
         //Asking repository, user, path and version
+        Repository repository = new Repository();
         Logger.Write("Insert the repository name: ", ConsoleColor.Blue);
-        string r = Logger.ReadString();
+        repository.repository = Logger.ReadString();
         Logger.Write("Insert the user name: ", ConsoleColor.Blue);
-        string u = Logger.ReadString();
+        repository.user = Logger.ReadString();
         Logger.Write("Insert the installation path: ", ConsoleColor.Blue);
-        string p;
         do {
-            p = Logger.ReadString();
-            if(!Directory.Exists(p))
-                Logger.Write("Not a valid path. New input: ", ConsoleColor.Red);
-        } while(!Directory.Exists(p));
+            repository.path = Logger.ReadString();
+            if(!Directory.Exists(repository.path))
+                Logger.Write("  Not a valid path. New input: ", ConsoleColor.Red);
+        } while(!Directory.Exists(repository.path));
         //Downloading the index
-        if(!Client.DownloadIndex(u, r)) {
-            Logger.WriteLine("Error either the repository doesn't have a github-updater." + r + ".json file, "
+        if(!Client.DownloadIndex(repository.user, repository.repository)) {
+            Logger.WriteLine("Error, either the repository doesn't have a github-updater." + repository.repository + ".json file, "
             + "or the repository doesn't exist");
             return;
         }
-        //TODO
-        Logger.Write("Insert the version: ", ConsoleColor.Blue);
-        string v = Logger.ReadString();
+        //Reading the index
+        Index index = JsonManager.ReadRepositoryIndex(repository.repository);
+        try {
+            Client.DownloadRelease(ref repository, index);
+        }
+        catch(Exception e) {
+            Logger.WriteLine("Error while downloading the release, exception: " + e, ConsoleColor.Red);
+            return;
+        }
         Logger.WriteLine();
     }
 }

@@ -1,7 +1,11 @@
 using Newtonsoft.Json;
 
 public class JsonManager {
-    public static Repositories readRepositoriesIndex() {
+    /// <summary>
+    /// Function to read github-updater.repositories.json
+    /// </summary>
+    /// <returns>The chosen release item</returns>
+    public static Repositories ReadRepositoriesIndex() {
         Repositories repositories = new Repositories();
         try {
             Repositories? temp;
@@ -25,7 +29,13 @@ public class JsonManager {
         }
         return repositories;
     }
-    public static Index readRepositoryIndex(string repository) {
+    /// <summary>
+    /// Function to read github-updater.<repository>.json
+    /// (<paramref name="repository"/>)
+    /// </summary>
+    /// <param name="repository">The repository name</param>
+    /// <returns>The chosen release item</returns>
+    public static Index ReadRepositoryIndex(string repository) {
         Index index = new Index();
         Index? temp;
         string fileContent = File.ReadAllText(

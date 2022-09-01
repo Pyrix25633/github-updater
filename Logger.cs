@@ -1,5 +1,3 @@
-using System.IO.Compression;
-
 public class Logger {
     private static string barFull = "█", barEmpty = " ";
     /// <summary>
@@ -49,6 +47,20 @@ public class Logger {
             }
         } while(s == null);
         return s;
+    }
+    /// <summary>
+    /// Function to input a char
+    /// </summary>
+    /// <returns>The char, not null</returns>
+    public static char ReadChar() {
+        string? s;
+        do {
+            s = Console.ReadLine();
+            if(s == null) {
+                Write("The input cannot be null. New input: ", ConsoleColor.Red);
+            }
+        } while(s == null);
+        return s[0];
     }
     /// <summary>
     /// Function to get the string time
