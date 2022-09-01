@@ -30,6 +30,25 @@ public class JsonManager {
         return repositories;
     }
     /// <summary>
+    /// Function to write to github-updater.repositories.json
+    /// (<paramref name="repositories"/>)
+    /// </summary>
+    /// <param name="repositories">The repositories object</param>
+    public static void WriteRepositoriesIndex(Repositories repositories) {
+        string tempFile = "index/github-updater.repositories.temp.json";
+        string file = "index/github-updater.repositories.json";
+        try {
+            File.WriteAllText(Client.GetFullPathFromExecutable(tempFile),
+                JsonConvert.SerializeObject(repositories, Formatting.Indented));
+            File.Delete(file);
+            File.Move(tempFile, file);
+        }
+        catch (Exception e) {
+            File.Delete(tempFile);
+            throw(new Exception("Error while writing to repositories index, exception: " + e));
+        }
+    }
+    /// <summary>
     /// Function to read github-updater.<repository>.json
     /// (<paramref name="repository"/>)
     /// </summary>

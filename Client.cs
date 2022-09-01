@@ -78,10 +78,10 @@ public class Client {
         Logger.Write("  ");
         foreach(Release item in index.releases) {
             if(item.tag == null) continue;
-            Logger.Write("[" + item.tag + "] ", ConsoleColor.Blue);
+            Logger.Write("[" + item.tag + "] ", ConsoleColor.Cyan);
         }
         Logger.WriteLine();
-        Logger.Write("Insert the version you want to download (\"l\" will default to the latest version): ", ConsoleColor.Cyan);
+        Logger.Write("Insert the version you want to download (\"l\" will default to the latest version): ", ConsoleColor.Blue);
         do {
             repository.version = Logger.ReadString();
             if(!IsValidTag(index, repository.version) && repository.version != "l")
@@ -91,6 +91,7 @@ public class Client {
         if(repository.version == "l") {
             if(index.latest == null) throw(new Exception("Latest release is null"));
             repository.version = index.latest;
+            if(!IsValidTag(index, index.latest)) throw(new Exception("Latest release is not valid"));
         }
         //Release files
         Release release = GetReleaseWithTag(index, repository.version);
@@ -107,13 +108,13 @@ public class Client {
         if(release.cross != null) {
             filesCount++; validOptions = validOptions.Append('C').ToArray();
         }
-        Logger.WriteLine(filesCount + " Release file" + ((filesCount == 0) ? "" : "s") + " found:", ConsoleColor.Green);
+        Logger.WriteLine(filesCount + " Release file" + ((filesCount == 1) ? "" : "s") + " found:", ConsoleColor.Green);
         Logger.Write("  ");
-        if(release.linux != null) Logger.Write("[L]: " + release.linux, ConsoleColor.Blue);
-        if(release.win != null) Logger.Write("[W]: " + release.win, ConsoleColor.Blue);
-        if(release.cross != null) Logger.Write("[C]: " + release.cross, ConsoleColor.Blue);
+        if(release.linux != null) Logger.Write("[L]: " + release.linux, ConsoleColor.Cyan);
+        if(release.win != null) Logger.Write("[W]: " + release.win, ConsoleColor.Cyan);
+        if(release.cross != null) Logger.Write("[C]: " + release.cross, ConsoleColor.Cyan);
         Logger.WriteLine();
-        Logger.Write("Chose a release file: ", ConsoleColor.Cyan);
+        Logger.Write("Chose a release file: ", ConsoleColor.Blue);
         char r;
         do {
             r = Logger.ReadChar();

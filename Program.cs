@@ -133,6 +133,7 @@ public class Program {
         //Asking repository, user, path and version
         Repository repository = new Repository();
         Logger.Write("Insert the repository name: ", ConsoleColor.Blue);
+        //TODO
         repository.repository = Logger.ReadString();
         Logger.Write("Insert the user name: ", ConsoleColor.Blue);
         repository.user = Logger.ReadString();
@@ -142,6 +143,7 @@ public class Program {
             if(!Directory.Exists(repository.path))
                 Logger.Write("  Not a valid path. New input: ", ConsoleColor.Red);
         } while(!Directory.Exists(repository.path));
+        if(repository.path == "./" || repository.path == ".") repository.path = null;
         //Downloading the index
         if(!Client.DownloadIndex(repository.user, repository.repository)) {
             Logger.WriteLine("Error, either the repository doesn't have a github-updater." + repository.repository + ".json file, "
@@ -157,6 +159,17 @@ public class Program {
             Logger.WriteLine("Error while downloading the release, exception: " + e, ConsoleColor.Red);
             return;
         }
+        //Adding the repository to github-updater.repositories.json
+        Repositories repositories;
+        try {repositories = JsonManager.ReadRepositoriesIndex();}
+        catch(Exception e) {
+            Logger.WriteLine("Error while parsing repositories index, exception: " + e, ConsoleColor.Red);
+            return;
+        }
+        if(repositories.repositories == null) repositories.repositories = new Repository[0];
+        repositories.repositories = repositories.repositories.Append(repository).ToArray();
+        try {JsonManager.WriteRepositoriesIndex(repositories);}
+        catch(Exception e) {Logger.WriteLine(e.ToString(), ConsoleColor.Red);}
         Logger.WriteLine();
     }
 }

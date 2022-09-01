@@ -1,21 +1,28 @@
 {
-    "updater": {
-        "repository": "github-updater",
-        "user": "Pyrix25633",
-        "version": "0.1.0"
+  "updater": {
+    "repository": "github-updater",
+    "user": "Pyrix25633",
+    "path": null,
+    "version": "0.1.0"
+  },
+  "repositories": [
+    {
+      "repository": "backup-utility-cs",
+      "user": "Pyrix25633",
+      "path": "test",
+      "version": "1.5.4"
     },
-    "repositories": [
-        {
-            "repository": "backup-utility-cs",
-            "user": "Pyrix25633",
-            "path": "test",
-            "version": "1.5.4"
-        },
-        {
-            "repository": "risc-sim",
-            "user": "Pyrix25633",
-            "path": "test",
-            "version": "1.0.0"
-        }
-    ]
+    {
+      "repository": "risc-sim",
+      "user": "Pyrix25633",
+      "path": "test",
+      "version": "1.0.0"
+    },
+    {
+      "repository": "Fabric-ImprovedEnd",
+      "user": "Pyrix25633",
+      "path": "/media/pyrix25633/Drive/repos/github-updater/programs/",
+      "version": "1.0.0"
+    }
+  ]
 }
