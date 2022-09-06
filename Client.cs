@@ -1,4 +1,6 @@
 using System.Reflection;
+using System.IO.Compression;
+using System.Text;
 
 public class Client {
     /// <summary>
@@ -10,8 +12,8 @@ public class Client {
     /// <returns>True if the download succedeed</returns>
     public static bool DownloadIndex(string user, string repository) {
         string url = "https://raw.githubusercontent.com/" + user + "/" + repository + "/main/github-updater." + repository + ".json";
-        string tempFile = GetFullPathFromExecutable("index/repositories/github-updater." + repository + ".temp.json");
         string file = GetFullPathFromExecutable("index/repositories/github-updater." + repository + ".json");
+        string tempFile = file + ".temp";
         if(!Directory.Exists("index/repositories")) {
             try {Directory.CreateDirectory(GetFullPathFromExecutable("index/repositories"));}
             catch(Exception e) {
@@ -61,14 +63,6 @@ public class Client {
             }
             //Getting full path
             repository.path = new FileInfo(repository.path).FullName;
-        }
-        //Temp folder
-        string temp = GetFullPathFromExecutable("github-updater.temp/");
-        if(!Directory.Exists(temp)) {
-            try {
-                Directory.CreateDirectory(temp);
-            }
-            catch(Exception e) {throw(new Exception("Error while attempting directory creation, exception: " + e));}
         }
         //Choosing version
         if(index.releases == null || index.releases.Length == 0)
@@ -121,7 +115,153 @@ public class Client {
             if(!validOptions.Contains(r))
                 Logger.Write("  Not a valid option. New input: ", ConsoleColor.Red);
         } while(!validOptions.Contains(r));
-        //TODO
+        string? releaseFile = null;
+        switch(r) {
+            case 'L': releaseFile = release.linux; break;
+            case 'W': releaseFile = release.win; break;
+            case 'C': releaseFile = release.cross; break;
+        }
+        DownloadRelease(repository, index, releaseFile);
+    }
+    public static void DownloadRelease(Repository repository, Index index, string? releaseFile) {
+        if(releaseFile == null) throw(new Exception("Null release file exception"));
+        string url = "https://github.com/" + repository.user + "/" + repository.repository + "/releases/download/"
+            + repository.version + "/" + releaseFile;
+        string tempDir = GetFullPathFromExecutable("github-updater.temp");
+        string tempFile = tempDir + "/" + releaseFile + ".temp";
+        //Checking temporary directory
+        if(!Directory.Exists(tempDir)) {
+            try {
+                Directory.CreateDirectory(tempDir);
+            }
+            catch(Exception e) {throw(new Exception("Error while attempting directory creation, exception: " + e));}
+        }
+        //Downloading the file
+        try {
+            Logger.WriteLine("Downloading release file, operation may take some time...", ConsoleColor.Yellow);
+            using (var client = new HttpClient()) {
+                using (var s = client.GetStreamAsync(url)) {
+                    using (var fs = new FileStream(tempFile, FileMode.Create)) {
+                        s.Result.CopyTo(fs);
+                    }
+                }
+            }
+            Logger.WriteLine("Release file succesfully downloaded", ConsoleColor.Green);
+            if(releaseFile.EndsWith(".zip")) {
+                //Deleting content except entries listed in the keep array
+                Logger.WriteLine("Deleting unnecessary files...", ConsoleColor.Yellow);
+                DeleteExceptKeep(repository.path, index.keep);
+                //Decompress zip
+                Logger.WriteLine("Extracting release file with zip, operation may take some time...", ConsoleColor.Yellow);
+                string tempExtractionDir = tempDir + "/" + releaseFile;
+                try {
+                    Directory.CreateDirectory(tempExtractionDir);
+                }
+                catch(Exception) {
+                    Directory.Delete(tempExtractionDir, true);
+                    Directory.CreateDirectory(tempExtractionDir);
+                }
+                ZipFile.ExtractToDirectory(tempFile, tempExtractionDir);
+                Logger.WriteLine("Release extracted", ConsoleColor.Green);
+                //TODO
+            }
+            else if(releaseFile.EndsWith(".tar.gz")) {
+                //Deleting content except entries listed in the keep array
+                Logger.WriteLine("Deleting unnecessary files...", ConsoleColor.Yellow);
+                DeleteExceptKeep(repository.path, index.keep);
+                //Decompress tar.gz
+                Logger.WriteLine("Decompressing release file with tar.gz, operation may take some time...", ConsoleColor.Yellow);
+                string tempExtractionDir = tempDir + "/" + releaseFile;
+                try {
+                    Directory.CreateDirectory(tempExtractionDir);
+                }
+                catch(Exception) {
+                    Directory.Delete(tempExtractionDir, true);
+                    Directory.CreateDirectory(tempExtractionDir);
+                }
+                ExtractTarGz(tempFile, tempExtractionDir);
+                Logger.WriteLine("Release extracted", ConsoleColor.Green);
+                //TODO
+            }
+            else {
+                //TODO
+            }
+        }
+        catch(Exception e) {throw(new Exception("Error while downloading release file, exception: " + e));}
+    }
+    /// <summary>
+    /// Function to extract a .tar.gz file
+    /// (<paramref name="inputFile"/>, <paramref name="outputDir"/>)
+    /// </summary>
+    /// <param name="inputFile">The .tar.gz file</param>
+    /// <param name="tag">The output directory</param>
+    public static void ExtractTarGz(string inputFile, string outputDir) {
+        using (var stream = File.OpenRead(inputFile)) {
+            using (var gzip = new GZipStream(stream, CompressionMode.Decompress)){
+				const int chunk = 4096;
+				using (var memStr = new MemoryStream()){
+					int read;
+					var buffer = new byte[chunk];
+					do{
+						read = gzip.Read(buffer, 0, chunk);
+						memStr.Write(buffer, 0, read);
+					} while(read == chunk);
+					memStr.Seek(0, SeekOrigin.Begin);
+					var buffer2 = new byte[100];
+			        while(true) {
+				        stream.Read(buffer2, 0, 100);
+                        var name = Encoding.ASCII.GetString(buffer2).Trim('\0');
+                        if(String.IsNullOrWhiteSpace(name))
+                            break;
+                        stream.Seek(24, SeekOrigin.Current);
+                        stream.Read(buffer2, 0, 12);
+                        var size = Convert.ToInt64(Encoding.UTF8.GetString(buffer2, 0, 12).Trim('\0').Trim(), 8);
+                        stream.Seek(376L, SeekOrigin.Current);
+                        var output = Path.Combine(outputDir, name);
+                        var outputDirectoryName = Path.GetDirectoryName(output);
+                        if(!Directory.Exists(outputDirectoryName))
+                            if(outputDirectoryName != null)
+                                Directory.CreateDirectory(outputDirectoryName);
+                        if(!name.Equals("./", StringComparison.InvariantCulture)) {
+                            using (var str = File.Open(output, FileMode.OpenOrCreate, FileAccess.Write)) {
+                                var buf = new byte[size];
+                                stream.Read(buf, 0, buf.Length);
+                                str.Write(buf, 0, buf.Length);
+                            }
+                        }
+				        var pos = stream.Position;
+                        var offset = 512 - (pos  % 512);
+                        if(offset == 512)
+                            offset = 0;
+                        stream.Seek(offset, SeekOrigin.Current);
+                    }
+				}
+			}
+        }
+    }
+    /// <summary>
+    /// Function to delete all entries except those on a keep array
+    /// (<paramref name="path"/>, <paramref name="keep"/>)
+    /// </summary>
+    /// <param name="path">The path</param>
+    /// <param name="keep">The keep array</param>
+    public static void DeleteExceptKeep(string? path, string[]? keep) {
+        if(path == null || keep == null || keep.Length == 0) return;
+        for(int i = 0; i < keep.Length; i++) {
+            keep[i] = path + "/" + keep[i];
+        }
+        EnumerationOptions enumOptions = new EnumerationOptions();
+        enumOptions.RecurseSubdirectories = true; enumOptions.AttributesToSkip = default;
+        string[] filesToDelete = Directory.GetFileSystemEntries(path, "*", enumOptions).Except(keep).Reverse().ToArray();
+        foreach(string item in filesToDelete) {
+            FileInfo info = new FileInfo(item);
+            if((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
+                try {Directory.Delete(item);}
+                catch(Exception e) {Logger.WriteLine("Could not remove directory " + item + ", exception: " + e);}
+            else
+                try {File.Delete(item);}
+                catch(Exception e) {Logger.WriteLine("Could not remove file " + item + ", exception: " + e);}
+        }
     }
     /// <summary>
     /// Function to see if a tag is valid
