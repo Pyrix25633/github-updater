@@ -167,7 +167,11 @@ public class Program {
             return;
         }
         if(repositories.repositories == null) repositories.repositories = new Repository[0];
-        repositories.repositories = repositories.repositories.Append(repository).ToArray();
+        int pos;
+        if(Client.IsInRepositoriesIndex(repositories, repository, out pos))
+            repositories.repositories[pos] = repository;
+        else
+            repositories.repositories = repositories.repositories.Append(repository).ToArray();
         try {JsonManager.WriteRepositoriesIndex(repositories);}
         catch(Exception e) {Logger.WriteLine(e.ToString(), ConsoleColor.Red);}
         Logger.WriteLine();

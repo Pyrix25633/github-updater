@@ -9,8 +9,8 @@
     {
       "repository": "backup-utility-cs",
       "user": "Pyrix25633",
-      "path": "test",
-      "version": "1.5.4"
+      "path": "/media/pyrix25633/Drive/repos/github-updater/programs/backup-utility-cs",
+      "version": "1.5.5"
     },
     {
       "repository": "risc-sim",
@@ -21,8 +21,14 @@
     {
       "repository": "Fabric-ImprovedEnd",
       "user": "Pyrix25633",
-      "path": "/media/pyrix25633/Drive/repos/github-updater/programs/",
+      "path": "/media/pyrix25633/Drive/repos/github-updater/programs/Fabric-ImprovedEnd",
       "version": "1.0.0"
+    },
+    {
+      "repository": "Fabric-VanillaPlus",
+      "user": "Pyrix25633",
+      "path": "/media/pyrix25633/Drive/repos/github-updater/programs/Fabric-VanillaPlus",
+      "version": "0.5.0"
     }
   ]
 }

@@ -53,17 +53,15 @@ public class Client {
         if(repository.repository == null || repository.user == null)
             throw(new Exception("Null repository exception"));
         //Checking installation path
-        if(repository.path == null) repository.path = GetFullPathFromExecutable("programs/");
-        else {
-            if(!Directory.Exists(repository.path)) {
-                try {
-                    Directory.CreateDirectory(repository.path);
-                }
-                catch(Exception e) {throw(new Exception("Error while attempting directory creation, exception: " + e));}
+        if(repository.path == null) repository.path = GetFullPathFromExecutable("programs/" + repository.repository);
+        if(!Directory.Exists(repository.path)) {
+            try {
+                Directory.CreateDirectory(repository.path);
             }
-            //Getting full path
-            repository.path = new FileInfo(repository.path).FullName;
+            catch(Exception e) {throw(new Exception("Error while attempting directory creation, exception: " + e));}
         }
+        //Getting full path
+        repository.path = new FileInfo(repository.path).FullName;
         //Choosing version
         if(index.releases == null || index.releases.Length == 0)
             throw(new Exception("This repository has 0 releases"));
@@ -103,11 +101,9 @@ public class Client {
             filesCount++; validOptions = validOptions.Append('C').ToArray();
         }
         Logger.WriteLine(filesCount + " Release file" + ((filesCount == 1) ? "" : "s") + " found:", ConsoleColor.Green);
-        Logger.Write("  ");
-        if(release.linux != null) Logger.Write("[L]: " + release.linux, ConsoleColor.Cyan);
-        if(release.win != null) Logger.Write("[W]: " + release.win, ConsoleColor.Cyan);
-        if(release.cross != null) Logger.Write("[C]: " + release.cross, ConsoleColor.Cyan);
-        Logger.WriteLine();
+        if(release.linux != null) Logger.WriteLine("  [L]: " + release.linux, ConsoleColor.Cyan);
+        if(release.win != null) Logger.WriteLine("  [W]: " + release.win, ConsoleColor.Cyan);
+        if(release.cross != null) Logger.WriteLine("  [C]: " + release.cross, ConsoleColor.Cyan);
         Logger.Write("Chose a release file: ", ConsoleColor.Blue);
         char r;
         do {
@@ -163,7 +159,7 @@ public class Client {
                 }
                 ZipFile.ExtractToDirectory(tempFile, tempExtractionDir);
                 Logger.WriteLine("Release extracted", ConsoleColor.Green);
-                //TODO
+                CopyExceptKeep(tempExtractionDir, repository.path, index.keep);
             }
             else if(releaseFile.EndsWith(".tar.gz")) {
                 //Deleting content except entries listed in the keep array
@@ -181,10 +177,11 @@ public class Client {
                 }
                 ExtractTarGz(tempFile, tempExtractionDir);
                 Logger.WriteLine("Release extracted", ConsoleColor.Green);
-                //TODO
+                CopyExceptKeep(tempExtractionDir, repository.path, index.keep);
             }
             else {
-                //TODO
+                try {if(repository.path != null) File.Move(tempFile, repository.path + "/" + releaseFile);}
+                catch(Exception e) {Logger.WriteLine("Could not copy file " + tempFile + ", exception: " + e, ConsoleColor.Red);}
             }
         }
         catch(Exception e) {throw(new Exception("Error while downloading release file, exception: " + e));}
@@ -247,9 +244,6 @@ public class Client {
     /// <param name="keep">The keep array</param>
     public static void DeleteExceptKeep(string? path, string[]? keep) {
         if(path == null || keep == null || keep.Length == 0) return;
-        for(int i = 0; i < keep.Length; i++) {
-            keep[i] = path + "/" + keep[i];
-        }
         EnumerationOptions enumOptions = new EnumerationOptions();
         enumOptions.RecurseSubdirectories = true; enumOptions.AttributesToSkip = default;
         string[] filesToDelete = Directory.GetFileSystemEntries(path, "*", enumOptions).Except(keep).Reverse().ToArray();
@@ -263,6 +257,25 @@ public class Client {
                 catch(Exception e) {Logger.WriteLine("Could not remove file " + item + ", exception: " + e);}
         }
     }
+    public static void CopyExceptKeep(string? source, string? destination, string[]? keep) {
+        if(source == null || destination == null || keep == null || keep.Length == 0) return;
+        EnumerationOptions enumOptions = new EnumerationOptions();
+        enumOptions.RecurseSubdirectories = true; enumOptions.AttributesToSkip = default;
+        string[] filesToCopy = Directory.GetFileSystemEntries(source, "*", enumOptions).Except(keep).Reverse().ToArray();
+        foreach(string item in filesToCopy) {
+            FileInfo info = new FileInfo(item);
+            string destinationPath = destination + "/" + item;
+            if((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
+                try {
+                    if(!Directory.Exists(destinationPath))
+                        Directory.CreateDirectory(destinationPath);
+                }
+                catch(Exception e) {Logger.WriteLine("Could not create directory " + item + ", exception: " + e);}
+            else
+                try {File.Move(source + "/" + item, destinationPath);}
+                catch(Exception e) {Logger.WriteLine("Could not copy file " + item + ", exception: " + e);}
+        }
+    }
     /// <summary>
     /// Function to see if a tag is valid
     /// (<paramref name="index"/>, <paramref name="tag"/>)
@@ -274,6 +287,17 @@ public class Client {
         if(index.releases == null) return false;
         foreach(Release item in index.releases) {
             if(item.tag == tag) return true;
+        }
+        return false;
+    }
+    public static bool IsInRepositoriesIndex(Repositories repositories, Repository repository, out int pos) {
+        pos = 0;
+        if(repositories.repositories == null || repositories.repositories.Length == 0) return false;
+        for(int i = 0; i < repositories.repositories.Length; i++) {
+            if(repositories.repositories[i].repository == repository.repository) {
+                pos = i;
+                return true;
+            }
         }
         return false;
     }
