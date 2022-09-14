@@ -221,7 +221,7 @@ public class Client {
     /// <param name="inputFile">The .tar.gz file</param>
     /// <param name="outputDir">The output directory</param>
     public static void ExtractTarGz(string inputFile, string outputDir) {
-        string tarFile = inputFile.Substring(inputFile.Length - 4);
+        string tarFile = inputFile.Substring(0, inputFile.Length - 4);
         ExtractGz(inputFile, tarFile);
         ExtractTar(tarFile, outputDir);
     }
@@ -232,7 +232,7 @@ public class Client {
     /// <param name="inputFile">The .gz file</param>
     /// <param name="outputFile">The output file</param>
     public static void ExtractGz(string inputFile, string outputFile) {
-        byte[ ] dataBuffer = new byte[4096];
+        byte[] dataBuffer = new byte[4096];
         using(System.IO.Stream fs = new FileStream(inputFile, FileMode.Open, FileAccess.Read)) {
             using(GZipInputStream gzipStream = new GZipInputStream(fs)) {
                 // Change this to your needs
