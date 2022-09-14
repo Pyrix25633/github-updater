@@ -7,25 +7,42 @@ public class JsonManager {
     /// <returns>The chosen release item</returns>
     public static Repositories ReadRepositoriesIndex() {
         Repositories repositories = new Repositories();
-        try {
-            Repositories? temp;
-            string fileContent = File.ReadAllText(Client.GetFullPathFromExecutable("index/github-updater.repositories.json"));
-            temp = JsonConvert.DeserializeObject<Repositories>(fileContent);
-            if(temp != null && temp.updater != null && temp.updater.repository != null
-                && temp.updater.user != null && temp.updater.version != null) {
-                repositories = temp;
+        string index = Client.GetFullPathFromExecutable("index/github-updater.repositories.json");
+        if(File.Exists(index)) {
+            try {
+                Repositories? temp;
+                string fileContent = File.ReadAllText(index);
+                temp = JsonConvert.DeserializeObject<Repositories>(fileContent);
+                if(temp != null && temp.updater != null && temp.updater.repository != null
+                    && temp.updater.user != null && temp.updater.version != null) {
+                    repositories = temp;
+                }
+                else {
+                    throw(new Exception("Error while parsing repositories index"));
+                }
             }
-            else {
-                throw(new Exception("Error while parsing repositories index"));
+            catch(Exception e) {
+                Logger.WriteLine("Error while reading repositories index, exception: " + e, ConsoleColor.Red);
+                throw(new Exception());
             }
         }
-        catch(Exception e) {
-            Logger.WriteLine("Error while reading repositories index, exception: " + e, ConsoleColor.Red);
-            throw(new Exception());
-        }
-        //0 repositories found
-        if(repositories.repositories == null || repositories.repositories.Length == 0) {
-            Logger.WriteLine("0 External repositories found", ConsoleColor.Yellow);
+        else { //Index file not there
+            repositories.updater = new Repository();
+            repositories.updater.user = "Pyrix25633";
+            repositories.updater.repository = "github-updater";
+            repositories.updater.path = null;
+            repositories.updater.version = Program.version;
+            string indexDirectory = Client.GetFullPathFromExecutable("index");
+            string repositoriesDirectory = indexDirectory + "/repositories";
+            string githubUpdaterIndex = repositoriesDirectory + "/github-updater.github-updater.json";
+            if(!Directory.Exists(indexDirectory))
+                Directory.CreateDirectory(indexDirectory);
+            if(!Directory.Exists(repositoriesDirectory))
+                Directory.CreateDirectory(repositoriesDirectory);
+            if(!File.Exists(githubUpdaterIndex))
+                Client.DownloadIndex(repositories.updater.user, repositories.updater.repository);
+            repositories.repositories = null;
+            WriteRepositoriesIndex(repositories);
         }
         return repositories;
     }

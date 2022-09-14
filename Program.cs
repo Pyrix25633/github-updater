@@ -1,9 +1,9 @@
 using System;
 
 public class Program {
+    public static string version = "0.1.0";
     static void Main(string[] args) {
         // Version
-        string version = "0.1.0";
         Logger.WriteLine();
         Logger.WriteLine("GitHub updater " + version, ConsoleColor.Cyan);
         Logger.WriteLine();
@@ -43,6 +43,7 @@ public class Program {
         }
     }
     public static void Help() {
+        //Print help command
         Logger.WriteLine("Usage: github-updater [COMMAND]", ConsoleColor.Blue);
         Logger.WriteLine("Commands:", ConsoleColor.Green);
         Logger.WriteLine("  h, help                           Prints help message     ", ConsoleColor.Yellow);
@@ -58,12 +59,9 @@ public class Program {
             Logger.WriteLine("Error while parsing repositories index, exception: " + e, ConsoleColor.Red);
             return;
         }
-        if(repositories.repositories == null) return;
-        //1 or more repositories, listing versions
-        Logger.Write(repositories.repositories.Length.ToString() + " External repositor"
-            + ((repositories.repositories.Length == 1) ? "y" : "ies") + " found: ", ConsoleColor.Green);
         Logger.WriteLine("(The index is local and might be outdated)", ConsoleColor.Yellow);
         Logger.WriteLine();
+        //github-updater repository
         if(repositories.updater == null || repositories.updater.repository == null) return;
         index = JsonManager.ReadRepositoryIndex(repositories.updater.repository);
         Logger.WriteLine("  Repository:     " + repositories.updater.repository, ConsoleColor.Cyan);
@@ -83,25 +81,33 @@ public class Program {
             Logger.WriteLine("Error while parsing version, exception: " + e, ConsoleColor.Red);
         }
         Logger.WriteLine();
-        foreach(Repository item in repositories.repositories) {
-            if(item.repository != null) {
-                index = JsonManager.ReadRepositoryIndex(item.repository);
-                Logger.WriteLine("  Repository:     " + item.repository, ConsoleColor.Blue);
-                Logger.WriteLine("  User:           " + item.user, ConsoleColor.Blue);
-                Logger.WriteLine("  Path:           " + item.path, ConsoleColor.Blue);
-                Logger.WriteLine("  Latest version: " + index.latest, ConsoleColor.Blue);
-                Logger.Write("  Local version:  " + item.version + " ", ConsoleColor.Blue);
-                try {
-                    latest = new Version(index.latest); local = new Version(item.version);
-                    if(Version.IsOutdated(latest, local))
-                        Logger.WriteLine("✗ Outdated", ConsoleColor.Red);
-                    else
-                        Logger.WriteLine("✓ Up-to-date", ConsoleColor.Green);
+        //External repositories
+        if(repositories.repositories == null || repositories.repositories.Length == 0)
+            Logger.WriteLine("0 External repositories found", ConsoleColor.Yellow);
+        else {
+            Logger.Write(repositories.repositories.Length.ToString() + " External repositor"
+                + ((repositories.repositories.Length == 1) ? "y" : "ies") + " found: ", ConsoleColor.Green);
+            Logger.WriteLine();
+            foreach(Repository item in repositories.repositories) {
+                if(item.repository != null) {
+                    index = JsonManager.ReadRepositoryIndex(item.repository);
+                    Logger.WriteLine("  Repository:     " + item.repository, ConsoleColor.Blue);
+                    Logger.WriteLine("  User:           " + item.user, ConsoleColor.Blue);
+                    Logger.WriteLine("  Path:           " + item.path, ConsoleColor.Blue);
+                    Logger.WriteLine("  Latest version: " + index.latest, ConsoleColor.Blue);
+                    Logger.Write("  Local version:  " + item.version + " ", ConsoleColor.Blue);
+                    try {
+                        latest = new Version(index.latest); local = new Version(item.version);
+                        if(Version.IsOutdated(latest, local))
+                            Logger.WriteLine("✗ Outdated", ConsoleColor.Red);
+                        else
+                            Logger.WriteLine("✓ Up-to-date", ConsoleColor.Green);
+                    }
+                    catch(Exception e) {
+                        Logger.WriteLine("Error while parsing version, exception: " + e, ConsoleColor.Red);
+                    }
+                    Logger.WriteLine();
                 }
-                catch(Exception e) {
-                    Logger.WriteLine("Error while parsing version, exception: " + e, ConsoleColor.Red);
-                }
-                Logger.WriteLine();
             }
         }
     }
@@ -109,23 +115,30 @@ public class Program {
         Repositories repositories;
         //Get repositories index (github-updater.repositories.json)
         try {repositories = JsonManager.ReadRepositoriesIndex();}
-        catch(Exception) {return;}
-        if(repositories.repositories == null) return;
-        //1 or more repositories, listing versions
-        Logger.WriteLine(repositories.repositories.Length.ToString() + " External repositor"
-            + ((repositories.repositories.Length == 1) ? "y" : "ies") + " found: ", ConsoleColor.Green);
-        Logger.WriteLine();
+        catch(Exception e) {
+            Logger.WriteLine("Error while parsing repositories index, exception: " + e, ConsoleColor.Red);
+            return;
+        }
+        //github-updater repository
         if(repositories.updater == null || repositories.updater.repository == null || repositories.updater.user == null) return;
         Logger.WriteLine("  Repository:     " + repositories.updater.repository, ConsoleColor.Cyan);
         Logger.WriteLine("  User:           " + repositories.updater.user, ConsoleColor.Cyan);
         Client.DownloadIndex(repositories.updater.user, repositories.updater.repository);
         Logger.WriteLine();
-        foreach(Repository item in repositories.repositories) {
-            if(item.repository != null && item.user != null) {
-                Logger.WriteLine("  Repository:     " + item.repository, ConsoleColor.Blue);
-                Logger.WriteLine("  User:           " + item.user, ConsoleColor.Blue);
-                Client.DownloadIndex(item.user, item.repository);
-                Logger.WriteLine();
+        //External repositories
+        if(repositories.repositories == null || repositories.repositories.Length == 0)
+            Logger.WriteLine("0 External repositories found", ConsoleColor.Yellow);
+        else {
+            Logger.WriteLine(repositories.repositories.Length.ToString() + " External repositor"
+                + ((repositories.repositories.Length == 1) ? "y" : "ies") + " found: ", ConsoleColor.Green);
+            Logger.WriteLine();
+            foreach(Repository item in repositories.repositories) {
+                if(item.repository != null && item.user != null) {
+                    Logger.WriteLine("  Repository:     " + item.repository, ConsoleColor.Blue);
+                    Logger.WriteLine("  User:           " + item.user, ConsoleColor.Blue);
+                    Client.DownloadIndex(item.user, item.repository);
+                    Logger.WriteLine();
+                }
             }
         }
     }

@@ -1,6 +1,6 @@
 .RECIPEPREFIX=>
 VERSION=0.1.0
-COMMAND=install
+COMMAND=list
 
 default:
 > clear
@@ -34,6 +34,7 @@ run-dotnet-local:
 > cp ./bin/debug/net6.0/github-updater.pdb ./
 > cp ./bin/debug/net6.0/github-updater.deps.json ./
 > cp ./bin/debug/net6.0/Newtonsoft.Json.dll ./
+> cp ./bin/debug/net6.0/ICSharpCode.SharpZipLib.dll ./
 > dotnet ./github-updater.dll -- $(COMMAND)
 
 run-dotnet-release:
