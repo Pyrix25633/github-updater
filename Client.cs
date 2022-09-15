@@ -166,9 +166,11 @@ public class Client {
         }
         if(releaseFile.EndsWith(".zip")) {
             //Deleting content except entries listed in the keep array
-            Logger.WriteLine("Deleting unnecessary files...", ConsoleColor.Yellow);
-            if(!freshInstall) DeleteExceptKeep(repository.path, index.keep);
-            Logger.WriteLine("Unnecessary files deleted", ConsoleColor.Green);
+            if(!freshInstall) {
+                Logger.WriteLine("Deleting unnecessary files...", ConsoleColor.Yellow);
+                DeleteExceptKeep(repository.path, index.keep);
+                Logger.WriteLine("Unnecessary files deleted", ConsoleColor.Green);
+            }
             //Decompress zip
             Logger.WriteLine("Extracting release file with zip, operation may take some time...", ConsoleColor.Yellow);
             string tempExtractionDir = tempDir + "/" + releaseFile.Substring(0, releaseFile.Length - 4);
@@ -182,17 +184,21 @@ public class Client {
             try {ZipFile.ExtractToDirectory(file, tempExtractionDir);}
             catch(Exception e) {throw(new Exception("Error while extracting the release file with zip, exception: " + e));}
             Logger.WriteLine("Release extracted", ConsoleColor.Green);
-            Logger.WriteLine("Installing...", ConsoleColor.Yellow);
+            if(freshInstall) Logger.WriteLine("Installing...", ConsoleColor.Yellow);
+            else Logger.WriteLine("Upgrading...", ConsoleColor.Yellow);
             CopyExceptKeep(tempExtractionDir, repository.path, index.keep, freshInstall);
-            Logger.WriteLine("Succesfully installed " + repository.repository + " " + repository.version, ConsoleColor.Green);
+            if(freshInstall) Logger.WriteLine("Succesfully installed " + repository.repository + " " + repository.version, ConsoleColor.Green);
+            else Logger.WriteLine("Succesfully upgraded " + repository.repository + " to " + repository.version, ConsoleColor.Green);
         }
         else if(releaseFile.EndsWith(".tar.gz")) {
             //Deleting content except entries listed in the keep array
-            Logger.WriteLine("Deleting unnecessary files...", ConsoleColor.Yellow);
-            if(!freshInstall) DeleteExceptKeep(repository.path, index.keep);
-            Logger.WriteLine("Unnecessary files deleted", ConsoleColor.Green);
+            if(!freshInstall) {
+                Logger.WriteLine("Deleting unnecessary files...", ConsoleColor.Yellow);
+                DeleteExceptKeep(repository.path, index.keep);
+                Logger.WriteLine("Unnecessary files deleted", ConsoleColor.Green);
+            }
             //Decompress tar.gz
-            Logger.WriteLine("Decompressing release file with tar and gzip, operation may take some time...", ConsoleColor.Yellow);
+            Logger.WriteLine("Extacting release file with tar and gzip, operation may take some time...", ConsoleColor.Yellow);
             string tempExtractionDir = tempDir + "/" + releaseFile.Substring(0, releaseFile.Length - 7);
             try {
                 Directory.CreateDirectory(tempExtractionDir);
@@ -204,9 +210,11 @@ public class Client {
             try {ExtractTarGz(file, tempExtractionDir);}
             catch(Exception e) {throw(new Exception("Error while extracting the release file with tar and gzip, exception: " + e));}
             Logger.WriteLine("Release extracted", ConsoleColor.Green);
-            Logger.WriteLine("Installing...", ConsoleColor.Yellow);
+            if(freshInstall) Logger.WriteLine("Installing...", ConsoleColor.Yellow);
+            else Logger.WriteLine("Upgrading...", ConsoleColor.Yellow);
             CopyExceptKeep(tempExtractionDir, repository.path, index.keep, freshInstall);
-            Logger.WriteLine("Succesfully installed " + repository.repository + " " + repository.version, ConsoleColor.Green);
+            if(freshInstall) Logger.WriteLine("Succesfully installed " + repository.repository + " " + repository.version, ConsoleColor.Green);
+            else Logger.WriteLine("Succesfully upgraded " + repository.repository + " to " + repository.version, ConsoleColor.Green);
         }
         else {
             try {if(repository.path != null) File.Move(file, repository.path + "/" + releaseFile);}
@@ -267,20 +275,7 @@ public class Client {
         enumOptions.RecurseSubdirectories = true; enumOptions.AttributesToSkip = default;
         string[] filesToDelete = new string[0];
         if(keep != null && keep.Length > 0) {
-            string[] filesToKeep = new string[0];
-            foreach(string item in keep) {
-                FileInfo info = new FileInfo(path + "/" + item);
-                if(Directory.Exists(info.FullName) && (info.Attributes & FileAttributes.Directory) == FileAttributes.Directory) {
-                    try {
-                        string[] toAppend = Directory.GetFileSystemEntries(info.FullName, "*", enumOptions);
-                        foreach(string appendItem in toAppend)
-                            filesToKeep = filesToKeep.Append(appendItem).ToArray();
-                    }
-                    catch(Exception) {}
-                }
-                else
-                    filesToKeep = filesToKeep.Append(info.FullName).ToArray();
-            }
+            string[] filesToKeep = GetFilesToKeep(path, keep, enumOptions);
             filesToDelete = Directory.GetFileSystemEntries(path, "*", enumOptions).Except(filesToKeep).Reverse().ToArray();
         }
         else
@@ -309,20 +304,7 @@ public class Client {
         enumOptions.RecurseSubdirectories = true; enumOptions.AttributesToSkip = default;
         string[] filesToCopy = new string[0];
         if(keep != null && keep.Length > 0 && !freshInstall) {
-            string[] filesToKeep = new string[0];
-            foreach(string item in keep) {
-                FileInfo info = new FileInfo(source + "/" + item);
-                if((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory) {
-                    try {
-                        string[] toAppend = Directory.GetFileSystemEntries(info.FullName, "*", enumOptions);
-                        foreach(string appendItem in toAppend)
-                            filesToKeep = filesToKeep.Append(appendItem).ToArray();
-                    }
-                    catch(Exception) {}
-                }
-                else
-                    filesToKeep = filesToKeep.Append(info.FullName).ToArray();
-            }
+            string[] filesToKeep = GetFilesToKeep(source, keep, enumOptions);
             filesToCopy = Directory.GetFileSystemEntries(source, "*", enumOptions).Except(filesToKeep).ToArray();
         }
         else
@@ -343,6 +325,82 @@ public class Client {
             }
         }
     }
+    /// <summary>
+    /// Function to get the list of files to keep
+    /// (<paramref name="path"/>, <paramref name="keep"/>, <paramref name="enumOptions"/>)
+    /// </summary>
+    /// <param name="path">The path</param>
+    /// <param name="keep">The keep array from the repository index</param>
+    /// <param name="enumOptions">The enumeration options</param>
+    /// <returns>The array of files to keep</returns>
+    public static string[] GetFilesToKeep(string path, string[] keep, EnumerationOptions enumOptions) {
+        string[] filesToKeep = new string[0];
+        foreach(string item in keep) {
+            FileInfo? info = null;
+            if(item.Contains('*') || item.Contains('?')) { //With wildcard
+                try {
+                    string[] toAppend = Directory.GetFileSystemEntries(path, item, enumOptions);
+                    foreach(string appendItem in toAppend) {
+                        string[] toAppendFull = GetFullDirectoryListToEntry(appendItem, path);
+                        foreach(string appendItemFull in toAppendFull)
+                            filesToKeep = filesToKeep.Append(appendItemFull).ToArray();
+                    }    
+                }
+                catch(Exception) {}
+            }
+            else
+                info = new FileInfo(path + "/" + item);
+            if(info != null) { //Normal folder or file
+                if(Directory.Exists(info.FullName) && (info.Attributes & FileAttributes.Directory) == FileAttributes.Directory) {
+                    try {
+                        string[] toAppend = Directory.GetFileSystemEntries(info.FullName, "*", enumOptions);
+                        foreach(string appendItem in toAppend)
+                            filesToKeep = filesToKeep.Append(appendItem).ToArray();
+                        string[] toAppendFull = GetFullDirectoryListToEntry(info.FullName, path);
+                        foreach(string appendItemFull in toAppendFull)
+                            filesToKeep = filesToKeep.Append(appendItemFull).ToArray();
+                    }
+                    catch(Exception) {}
+                }
+                else {
+                    string[] toAppendFull = GetFullDirectoryListToEntry(info.FullName, path);
+                    foreach(string appendItemFull in toAppendFull)
+                        filesToKeep = filesToKeep.Append(appendItemFull).ToArray();
+                }
+            }
+        }
+        return filesToKeep.Distinct().ToArray();
+    }
+    /// <summary>
+    /// Function to get all the directories to an entry included
+    /// (<paramref name="entry"/>, <paramref name="path"/>)
+    /// </summary>
+    /// <param name="entry">The entry, either file or folder</param>
+    /// <param name="path">The starting path</param>
+    /// <returns>The list of all the directories and the entry</returns>
+    public static string[] GetFullDirectoryListToEntry(string entry, string path) {
+        if(path.EndsWith('/')) path = path.Substring(0, path.Length - 1);
+        if(entry.EndsWith('/')) entry = entry.Substring(0, entry.Length - 1);
+        string[] directoryList = {entry};
+        path = new FileInfo(path).FullName;
+        try {
+            do {
+                DirectoryInfo? temp = Directory.GetParent(entry);
+                if(temp != null) {
+                    entry = temp.FullName;
+                    if(entry != path)
+                        directoryList = directoryList.Append(entry).ToArray();
+                }
+                else
+                    return directoryList;
+            } while(entry != path);
+        }
+        catch(Exception) {}
+        return directoryList;
+    }
+    /// <summary>
+    /// Function to empty github-updater.temp/
+    /// </summary>
     public static void EmptyTemporaryDirectory() {
         string tempDir = GetFullPathFromExecutable("github-updater.temp");
         EnumerationOptions enumOptions = new EnumerationOptions();
@@ -350,6 +408,7 @@ public class Client {
         string[] filesToDelete = Directory.GetFileSystemEntries(tempDir, "*", enumOptions).Reverse().ToArray();
         foreach(string item in filesToDelete) {
             FileInfo info = new FileInfo(item);
+
             if((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
                 try {Directory.Delete(item);}
                 catch(Exception e) {Logger.WriteLine("Could not remove directory " + item + ", exception: " + e);}

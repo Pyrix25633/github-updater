@@ -3,7 +3,7 @@ using System;
 public class Program {
     public static string version = "0.1.0";
     static void Main(string[] args) {
-        // Version
+        //Version
         Logger.WriteLine();
         Logger.WriteLine("GitHub updater " + version, ConsoleColor.Cyan);
         Logger.WriteLine();
