@@ -48,11 +48,12 @@ public class Client {
     }
     /// <summary>
     /// Function to download a release
-    /// (<paramref name="repository"/>, <paramref name="index"/>)
+    /// (<paramref name="repository"/>, <paramref name="index"/>, <paramref name="latest"/>)
     /// </summary>
     /// <param name="repository">Repository object containing necessary informations</param>
     /// <param name="index">The repository index</param>
-    public static void DownloadRelease(ref Repository repository, Index index) {
+    /// <param name="latest">True to download the latest version without asking</param>
+    public static void DownloadRelease(ref Repository repository, Index index, bool? latest) {
         if(repository.repository == null || repository.user == null)
             throw(new Exception("Null repository exception"));
         bool freshInstall = false;
@@ -70,20 +71,27 @@ public class Client {
         //Choosing version
         if(index.releases == null || index.releases.Length == 0)
             throw(new Exception("This repository has 0 releases"));
-        Logger.WriteLine(index.releases.Length + " Release" + ((index.releases.Length == 1) ? "" : "s")
-            + " found:", ConsoleColor.Green);
-        Logger.Write("  ");
-        foreach(Release item in index.releases) {
-            if(item.tag == null) continue;
-            Logger.Write("[" + item.tag + "] ", ConsoleColor.Cyan);
+        if(latest == null || latest == false) {
+            Logger.WriteLine(index.releases.Length + " Release" + ((index.releases.Length == 1) ? "" : "s")
+                + " found:", ConsoleColor.Green);
+            Logger.Write("  ");
+            foreach(Release item in index.releases) {
+                if(item.tag == null) continue;
+                Logger.Write("[" + item.tag + "] ", ConsoleColor.Cyan);
+            }
+            Logger.WriteLine();
+            Logger.Write("Insert the version you want to download (\"l\" will default to the latest version): ", ConsoleColor.Blue);
+            do {
+                repository.version = Logger.ReadString();
+                if(!IsValidTag(index, repository.version) && repository.version != "l")
+                    Logger.Write("  Not a valid version. New input: ", ConsoleColor.Red);
+            } while(!IsValidTag(index, repository.version) && repository.version != "l");
         }
-        Logger.WriteLine();
-        Logger.Write("Insert the version you want to download (\"l\" will default to the latest version): ", ConsoleColor.Blue);
-        do {
-            repository.version = Logger.ReadString();
-            if(!IsValidTag(index, repository.version) && repository.version != "l")
-                Logger.Write("  Not a valid version. New input: ", ConsoleColor.Red);
-        } while(!IsValidTag(index, repository.version) && repository.version != "l");
+        else {
+            Logger.Write("Version:    ", ConsoleColor.Blue);
+            Logger.WriteLine(index.latest, ConsoleColor.White);
+            repository.version = "l";
+        }
         //Get latest version tag
         if(repository.version == "l") {
             if(index.latest == null) throw(new Exception("Latest release is null"));

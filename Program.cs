@@ -38,7 +38,7 @@ public class Program {
                 break;
             case Command.Install:
                 //Adding a repository
-                Install();
+                Install(arguments.installArguments);
                 break;
         }
     }
@@ -46,9 +46,13 @@ public class Program {
         //Print help command
         Logger.WriteLine("Usage: github-updater [COMMAND]", ConsoleColor.Blue);
         Logger.WriteLine("Commands:", ConsoleColor.Green);
-        Logger.WriteLine("  h, help                           Prints help message     ", ConsoleColor.Yellow);
-        Logger.WriteLine("  l, list                           Lists all repositories  ", ConsoleColor.Yellow);
-        Logger.WriteLine("  i, install                        Install a release       ", ConsoleColor.Yellow);
+        Logger.WriteLine("  h, help                                                                            Prints help message           ", ConsoleColor.Yellow);
+        Logger.WriteLine("  l, list                                                                            Lists all repositories        ", ConsoleColor.Yellow);
+        Logger.WriteLine("  i, install <(repository) (user) (path)> <\"l\">                                      Installs a release           ", ConsoleColor.Yellow);
+        Logger.WriteLine("     Optional arguments:                                                                                          ", ConsoleColor.Yellow);
+        Logger.WriteLine("      (repository) = Repository name, (user) = User name, (path) = Installation path                               ", ConsoleColor.Yellow);
+        Logger.WriteLine("      \"l\" = Select latest version without asking                                                                 ", ConsoleColor.Yellow);
+        Logger.WriteLine("<> = Optional argument \"\" = Literal string without quotation marks                                               ", ConsoleColor.Cyan);
     }
     public static void List() {
         Repositories repositories;
@@ -142,20 +146,33 @@ public class Program {
             }
         }
     }
-    public static void Install() {
+    public static void Install(InstallArguments args) {
         //Asking repository, user, path and version
         Repository repository = new Repository();
-        Logger.Write("Insert the repository name: ", ConsoleColor.Blue);
-        //TODO
-        repository.repository = Logger.ReadString();
-        Logger.Write("Insert the user name: ", ConsoleColor.Blue);
-        repository.user = Logger.ReadString();
-        Logger.Write("Insert the installation path: ", ConsoleColor.Blue);
-        do {
-            repository.path = Logger.ReadString();
-            if(!Directory.Exists(repository.path))
-                Logger.Write("  Not a valid path. New input: ", ConsoleColor.Red);
-        } while(!Directory.Exists(repository.path));
+        //Ask for repository, user and path
+        if(args.repository == null || args.user == null || args.path == null) {
+            Logger.Write("Insert the repository name: ", ConsoleColor.Blue);
+            repository.repository = Logger.ReadString();
+            Logger.Write("Insert the user name: ", ConsoleColor.Blue);
+            repository.user = Logger.ReadString();
+            Logger.Write("Insert the installation path: ", ConsoleColor.Blue);
+            do {
+                repository.path = Logger.ReadString();
+                if(!Directory.Exists(repository.path))
+                    Logger.Write("  Not a valid path. New input: ", ConsoleColor.Red);
+            } while(!Directory.Exists(repository.path));
+        }
+        else { //Repository, user and path already given by arguments
+            repository.repository = args.repository;
+            repository.user = args.user;
+            repository.path = args.path;
+            Logger.Write("Repository: ", ConsoleColor.Blue); Logger.WriteLine(repository.repository, ConsoleColor.White);
+            Logger.Write("User:       ", ConsoleColor.Blue); Logger.WriteLine(repository.user, ConsoleColor.White);
+            Logger.Write("Path:       ", ConsoleColor.Blue); Logger.WriteLine(repository.path, ConsoleColor.White);
+            if(!Directory.Exists(repository.path)) {
+                Logger.WriteLine("Error, directory " + args.path + " does not exist", ConsoleColor.Red);
+            }
+        }
         if(repository.path == "./" || repository.path == ".") repository.path = null;
         //Downloading the index
         if(!Client.DownloadIndex(repository.user, repository.repository)) {
@@ -166,7 +183,7 @@ public class Program {
         //Reading the index
         Index index = JsonManager.ReadRepositoryIndex(repository.repository);
         try {
-            Client.DownloadRelease(ref repository, index);
+            Client.DownloadRelease(ref repository, index, args.latest);
         }
         catch(Exception e) {
             Logger.WriteLine("Error while downloading the release, exception: " + e, ConsoleColor.Red);

@@ -4,10 +4,12 @@ public class Arguments {
     /// </summary>
     public Arguments() {
         errors = 0;
+        installArguments = new InstallArguments();
     }
 
     public Int16 errors;
     public Command command;
+    public InstallArguments installArguments;
 
     /// <summary>
     /// Function to parse the arguments
@@ -35,6 +37,16 @@ public class Arguments {
                 case "i":
                 case "install":
                     command = Command.Install;
+                    if(length - i >= 4) {
+                        installArguments.repository = args[i + 1];
+                        installArguments.user = args[i + 2];
+                        installArguments.path = args[i + 3];
+                        if(length - i >= 5)
+                            installArguments.latest = args[i + 4] == "l";
+                        else
+                            installArguments.latest = false;
+                        i = length;
+                    }
                     break;
                 case "--":
                     if(length == 1) {
@@ -48,6 +60,19 @@ public class Arguments {
             }
         }
     }
+}
+
+public class InstallArguments {
+    public InstallArguments() {
+        repository = null;
+        user = null;
+        path = null;
+        latest = null;
+    }
+    public string? repository;
+    public string? user;
+    public string? path;
+    public bool? latest;
 }
 
 public enum Command {

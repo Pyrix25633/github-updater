@@ -6,7 +6,7 @@ public class Logger {
     /// </summary>
     /// <param name="message">The message to output</param>
     /// <param name="color">The console foreground color, default is ConsoleColor.White</param>
-    public static void Write(string message, ConsoleColor color = ConsoleColor.White) {
+    public static void Write(string? message, ConsoleColor color = ConsoleColor.White) {
         Console.ForegroundColor = color;
         Console.Write(message);
         Console.ResetColor();
@@ -17,7 +17,7 @@ public class Logger {
     /// </summary>
     /// <param name="message">The message to output, default is empty string</param>
     /// <param name="color">The console foreground color, default is ConsoleColor.White</param>
-    public static void WriteLine(string message = "", ConsoleColor color = ConsoleColor.White) {
+    public static void WriteLine(string? message = "", ConsoleColor color = ConsoleColor.White) {
         Console.ForegroundColor = color;
         Console.WriteLine(message);
         Console.ResetColor();
