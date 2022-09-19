@@ -14,16 +14,16 @@ public class Version {
     /// <param name="latest">The string version</param>
     /// <returns>Version object</returns>
     public Version(string? version) {
-        if(version == null) throw(new Exception("Null version exception"));
+        if(version == null) throw(new NullReferenceException("Null version exception"));
         string[] splitted = version.Split('.');
-        if(splitted.Length != 3) throw(new Exception("Wrong version format"));
+        if(splitted.Length != 3) throw(new FormatException("Wrong version format"));
         try {
             major = int.Parse(splitted[0]);
             minor = int.Parse(splitted[1]);
             patch = int.Parse(splitted[2]);
         }
         catch(Exception e) {
-            throw(new Exception("Wrong version format, exception: " + e));
+            throw(new FormatException("Wrong version format, exception: " + e));
         }
     }
     /// <summary>

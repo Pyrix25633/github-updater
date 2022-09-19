@@ -13,12 +13,6 @@
       "version": "1.5.5"
     },
     {
-      "repository": "risc-sim",
-      "user": "Pyrix25633",
-      "path": "/media/pyrix25633/Drive/repos/github-updater/programs/risc-sim",
-      "version": "1.0.0"
-    },
-    {
       "repository": "Fabric-ImprovedEnd",
       "user": "Pyrix25633",
       "path": "/media/pyrix25633/Drive/repos/github-updater/programs/Fabric-ImprovedEnd",
@@ -29,6 +23,12 @@
       "user": "Pyrix25633",
       "path": "/media/pyrix25633/Drive/repos/github-updater/programs/Fabric-VanillaPlus",
       "version": "0.5.0"
+    },
+    {
+      "repository": "risc-sim",
+      "user": "Pyrix25633",
+      "path": "/media/pyrix25633/Drive/repos/github-updater/programs/risc-sim",
+      "version": "1.0.0"
     }
   ]
 }

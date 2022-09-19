@@ -55,7 +55,7 @@ public class Client {
     /// <param name="latest">True to download the latest version without asking</param>
     public static void DownloadRelease(ref Repository repository, Index index, bool? latest) {
         if(repository.repository == null || repository.user == null)
-            throw(new Exception("Null repository exception"));
+            throw(new NullReferenceException("Null repository exception"));
         bool freshInstall = false;
         //Checking installation path
         if(repository.path == null) repository.path = GetFullPathFromExecutable("programs/" + repository.repository);
@@ -94,7 +94,7 @@ public class Client {
         }
         //Get latest version tag
         if(repository.version == "l") {
-            if(index.latest == null) throw(new Exception("Latest release is null"));
+            if(index.latest == null) throw(new NullReferenceException("Null latest release exception"));
             repository.version = index.latest;
             if(!IsValidTag(index, index.latest)) throw(new Exception("Latest release is not valid"));
         }
@@ -141,7 +141,7 @@ public class Client {
     /// <param name="releaseFile">The release file name</param>
     /// <param name="freshInstall">If it is a fresh install or an upgrade</param>
     public static void DownloadRelease(Repository repository, Index index, string? releaseFile, bool freshInstall) {
-        if(releaseFile == null) throw(new Exception("Null release file exception"));
+        if(releaseFile == null) throw(new NullReferenceException("Null release file exception"));
         EmptyTemporaryDirectory();
         string url = "https://github.com/" + repository.user + "/" + repository.repository + "/releases/download/"
             + repository.version + "/" + releaseFile;
@@ -170,7 +170,7 @@ public class Client {
         }
         catch(Exception e) {
             File.Delete(tempFile);
-            throw(new Exception("Error while downloading release file, exception: " + e));
+            throw(new HttpRequestException("Error while downloading release file, exception: " + e));
         }
         if(releaseFile.EndsWith(".zip")) {
             //Deleting content except entries listed in the keep array
@@ -278,7 +278,7 @@ public class Client {
     /// <param name="path">The path</param>
     /// <param name="keep">The keep array</param>
     public static void DeleteExceptKeep(string? path, string[]? keep) {
-        if(path == null) return;
+        if(path == null) throw(new NullReferenceException("Null path exception"));
         EnumerationOptions enumOptions = new EnumerationOptions();
         enumOptions.RecurseSubdirectories = true; enumOptions.AttributesToSkip = default;
         string[] filesToDelete = new string[0];
@@ -478,7 +478,19 @@ public class Client {
     /// </summary>
     /// <param name="path">The relative path from the executable</param>
     /// <returns>The full path</returns>
-    public static string GetFullPathFromExecutable(string path) {
+    public static string GetFullPathFromExecutable(string path = "") {
+        if(path == "") return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "";
         return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + Path.DirectorySeparatorChar + path;
+    }
+    public static T[] RemoveAt<T>(T[] source, Int32 index) {
+        Int32 lenght = source.Length;
+        T[] dest = new T[lenght - 1];
+        if( index > 0 )
+            Array.Copy(source, 0, dest, 0, index);
+
+        if( index < lenght - 1 )
+            Array.Copy(source, index + 1, dest, index, lenght - index - 1);
+
+        return dest;
     }
 }

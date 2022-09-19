@@ -5,11 +5,13 @@ public class Arguments {
     public Arguments() {
         errors = 0;
         installArguments = new InstallArguments();
+        removeArguments = new RemoveArguments();
     }
 
     public Int16 errors;
     public Command command;
     public InstallArguments installArguments;
+    public RemoveArguments removeArguments;
 
     /// <summary>
     /// Function to parse the arguments
@@ -48,6 +50,14 @@ public class Arguments {
                         i = length;
                     }
                     break;
+                case "r":
+                case "remove":
+                    command = Command.Remove;
+                    if(length - i >= 2) {
+                        removeArguments.repository = args[i + 1];
+                        i = length;
+                    }
+                    break;
                 case "--":
                     if(length == 1) {
                         errors = 255;
@@ -75,9 +85,17 @@ public class InstallArguments {
     public bool? latest;
 }
 
+public class RemoveArguments {
+    public RemoveArguments() {
+        repository = null;
+    }
+    public string? repository;
+}
+
 public enum Command {
     Help = 0,
     List = 1,
     Update = 2,
-    Install = 3
+    Install = 3,
+    Remove = 4
 }

@@ -40,6 +40,10 @@ public class Program {
                 //Adding a repository
                 Install(arguments.installArguments);
                 break;
+            case Command.Remove:
+                //Removing a repository
+                Remove(arguments.removeArguments);
+                break;
         }
     }
     public static void Help() {
@@ -48,11 +52,14 @@ public class Program {
         Logger.WriteLine("Commands:", ConsoleColor.Green);
         Logger.WriteLine("  h, help                                                                            Prints help message           ", ConsoleColor.Yellow);
         Logger.WriteLine("  l, list                                                                            Lists all repositories        ", ConsoleColor.Yellow);
-        Logger.WriteLine("  i, install <(repository) (user) (path)> <\"l\">                                      Installs a release           ", ConsoleColor.Yellow);
-        Logger.WriteLine("     Optional arguments:                                                                                          ", ConsoleColor.Yellow);
+        Logger.WriteLine("  i, install <(repository) (user) (path)> <\"l\">                                      Installs a release            ", ConsoleColor.Yellow);
+        Logger.WriteLine("     Optional arguments:                                                                                           ", ConsoleColor.Yellow);
         Logger.WriteLine("      (repository) = Repository name, (user) = User name, (path) = Installation path                               ", ConsoleColor.Yellow);
-        Logger.WriteLine("      \"l\" = Select latest version without asking                                                                 ", ConsoleColor.Yellow);
-        Logger.WriteLine("<> = Optional argument \"\" = Literal string without quotation marks                                               ", ConsoleColor.Cyan);
+        Logger.WriteLine("      \"l\" = Select latest version without asking                                                                   ", ConsoleColor.Yellow);
+        Logger.WriteLine("  r, remove <(repository)>                                                             Removes an installation       ", ConsoleColor.Yellow);
+        Logger.WriteLine("     Optional arguments:                                                                                           ", ConsoleColor.Yellow);
+        Logger.WriteLine("      (repository) = Repository name                                                                               ", ConsoleColor.Yellow);
+        Logger.WriteLine("<> = Optional argument \"\" = Literal string without quotation marks                                                 ", ConsoleColor.Cyan);
     }
     public static void List() {
         Repositories repositories;
@@ -125,8 +132,8 @@ public class Program {
         }
         //github-updater repository
         if(repositories.updater == null || repositories.updater.repository == null || repositories.updater.user == null) return;
-        Logger.WriteLine("  Repository:     " + repositories.updater.repository, ConsoleColor.Cyan);
-        Logger.WriteLine("  User:           " + repositories.updater.user, ConsoleColor.Cyan);
+        Logger.WriteLine("  Repository: " + repositories.updater.repository, ConsoleColor.Cyan);
+        Logger.WriteLine("  User:       " + repositories.updater.user, ConsoleColor.Cyan);
         Client.DownloadIndex(repositories.updater.user, repositories.updater.repository);
         Logger.WriteLine();
         //External repositories
@@ -138,8 +145,8 @@ public class Program {
             Logger.WriteLine();
             foreach(Repository item in repositories.repositories) {
                 if(item.repository != null && item.user != null) {
-                    Logger.WriteLine("  Repository:     " + item.repository, ConsoleColor.Blue);
-                    Logger.WriteLine("  User:           " + item.user, ConsoleColor.Blue);
+                    Logger.WriteLine("  Repository: " + item.repository, ConsoleColor.Blue);
+                    Logger.WriteLine("  User:       " + item.user, ConsoleColor.Blue);
                     Client.DownloadIndex(item.user, item.repository);
                     Logger.WriteLine();
                 }
@@ -147,9 +154,8 @@ public class Program {
         }
     }
     public static void Install(InstallArguments args) {
-        //Asking repository, user, path and version
         Repository repository = new Repository();
-        //Ask for repository, user and path
+        //Asking for repository, user and path
         if(args.repository == null || args.user == null || args.path == null) {
             Logger.Write("Insert the repository name: ", ConsoleColor.Blue);
             repository.repository = Logger.ReadString();
@@ -205,5 +211,56 @@ public class Program {
         try {JsonManager.WriteRepositoriesIndex(repositories);}
         catch(Exception e) {Logger.WriteLine(e.ToString(), ConsoleColor.Red);}
         Logger.WriteLine();
+    }
+
+    public static void Remove(RemoveArguments args) {
+        Repositories repositories;
+        Repository repository = new Repository();
+        //Get repositories index (github-updater.repositories.json)
+        try {repositories = JsonManager.ReadRepositoriesIndex();}
+        catch(Exception e) {
+            Logger.WriteLine("Error while parsing repositories index, exception: " + e, ConsoleColor.Red);
+            return;
+        }
+        //Asking for repository
+        if(args.repository == null) {
+            Logger.Write("Insert the repository name: ", ConsoleColor.Blue);
+            repository.repository = Logger.ReadString();
+        }
+        else { //Repository already given by argument
+            repository.repository = args.repository;
+            Logger.Write("Repository: ", ConsoleColor.Blue); Logger.WriteLine(repository.repository, ConsoleColor.White);
+        }
+        //Searching repository in the repositories index
+        int pos;
+        if(Client.IsInRepositoriesIndex(repositories, repository, out pos) && repositories.repositories != null) {
+            repository = repositories.repositories[pos];
+            //Removing it from the index
+            repositories.repositories = Client.RemoveAt(repositories.repositories, pos);
+            try {
+                JsonManager.WriteRepositoriesIndex(repositories);
+                Logger.WriteLine("  Succesfully removed " + repository.repository + " from repositories index", ConsoleColor.Green);
+            }
+            catch(Exception e) {Logger.WriteLine(e.ToString(), ConsoleColor.Red);}
+        }
+        else {
+            Logger.WriteLine("Error, could not find repository " + repository.repository + " in the repositories index", ConsoleColor.Red);
+        }
+        //Removing the repository index
+        string file = Client.GetFullPathFromExecutable("index/repositories/github-updater." + repository.repository + ".json");
+        try {
+            if(!File.Exists(file)) throw(new FileNotFoundException());
+            File.Delete(file);
+            Logger.WriteLine("  Succesfully removed " + repository.repository + " index file", ConsoleColor.Green);
+        }
+        catch(Exception e) {Logger.WriteLine("Error while attempting to remove file " + file + ", exception: " + e, ConsoleColor.Red);}
+        //Removing installation
+        try {
+            if(repository.path == null) throw(new NullReferenceException("Null path exception"));
+            Client.DeleteExceptKeep(repository.path, null);
+            Directory.Delete(repository.path);
+            Logger.WriteLine("  Succesfully removed installation from " + repository.path, ConsoleColor.Green);
+        }
+        catch(Exception e) {Logger.WriteLine("Error while attempting to remove installation, exception: " + e, ConsoleColor.Red);}
     }
 }

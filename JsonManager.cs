@@ -22,15 +22,14 @@ public class JsonManager {
                 }
             }
             catch(Exception e) {
-                Logger.WriteLine("Error while reading repositories index, exception: " + e, ConsoleColor.Red);
-                throw(new Exception());
+                throw(new Exception("Error while reading repositories index, exception: " + e));
             }
         }
         else { //Index file not there
             repositories.updater = new Repository();
             repositories.updater.user = "Pyrix25633";
             repositories.updater.repository = "github-updater";
-            repositories.updater.path = null;
+            repositories.updater.path = Client.GetFullPathFromExecutable();
             repositories.updater.version = Program.version;
             string indexDirectory = Client.GetFullPathFromExecutable("index");
             string repositoriesDirectory = indexDirectory + "/repositories";
