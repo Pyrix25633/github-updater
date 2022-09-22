@@ -5,12 +5,14 @@ public class Arguments {
     public Arguments() {
         errors = 0;
         installArguments = new InstallArguments();
+        upgradeArguments = new UpgradeArguments();
         removeArguments = new RemoveArguments();
     }
 
     public Int16 errors;
     public Command command;
     public InstallArguments installArguments;
+    public UpgradeArguments upgradeArguments;
     public RemoveArguments removeArguments;
 
     /// <summary>
@@ -32,10 +34,6 @@ public class Arguments {
                 case "list":
                     command = Command.List;
                     break;
-                case "u":
-                case "update":
-                    command = Command.Update;
-                    break;
                 case "i":
                 case "install":
                     command = Command.Install;
@@ -44,9 +42,21 @@ public class Arguments {
                         installArguments.user = args[i + 2];
                         installArguments.path = args[i + 3];
                         if(length - i >= 5)
-                            installArguments.latest = args[i + 4] == "l";
+                            installArguments.latest = (args[i + 4] == "l") || (args[i + 4] == "latest");
                         else
                             installArguments.latest = false;
+                        i = length;
+                    }
+                    break;
+                case "u":
+                case "update":
+                    command = Command.Update;
+                    break;
+                case "p":
+                case "upgrade":
+                    command = Command.Upgrade;
+                    if(length - i >= 2) {
+                        upgradeArguments.all = (args[i + 1] == "a") || (args[i + 1] == "all");
                         i = length;
                     }
                     break;
@@ -85,6 +95,13 @@ public class InstallArguments {
     public bool? latest;
 }
 
+public class UpgradeArguments {
+    public UpgradeArguments() {
+        all = null;
+    }
+    public bool? all;
+}
+
 public class RemoveArguments {
     public RemoveArguments() {
         repository = null;
@@ -95,7 +112,8 @@ public class RemoveArguments {
 public enum Command {
     Help = 0,
     List = 1,
-    Update = 2,
-    Install = 3,
-    Remove = 4
+    Install = 2,
+    Update = 3,
+    Upgrade = 4,
+    Remove = 5
 }

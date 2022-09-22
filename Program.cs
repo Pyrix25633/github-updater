@@ -29,19 +29,23 @@ public class Program {
                 Help();
                 break;
             case Command.List:
-                //Listing local repositories
+                //Listing all repositories
                 List();
                 break;
-            case Command.Update:
-                //Updating indexes
-                Update();
-                break;
             case Command.Install:
-                //Adding a repository
+                //Installing a release
                 Install(arguments.installArguments);
                 break;
+            case Command.Update:
+                //Downloading updated indexes
+                Update();
+                break;
+            case Command.Upgrade:
+                //Upgrading installations
+                Upgrade(arguments.upgradeArguments);
+                break;
             case Command.Remove:
-                //Removing a repository
+                //Removing an installation
                 Remove(arguments.removeArguments);
                 break;
         }
@@ -50,16 +54,21 @@ public class Program {
         //Print help command
         Logger.WriteLine("Usage: github-updater [COMMAND]", ConsoleColor.Blue);
         Logger.WriteLine("Commands:", ConsoleColor.Green);
-        Logger.WriteLine("  h, help                                                                            Prints help message           ", ConsoleColor.Yellow);
-        Logger.WriteLine("  l, list                                                                            Lists all repositories        ", ConsoleColor.Yellow);
-        Logger.WriteLine("  i, install <(repository) (user) (path)> <\"l\">                                      Installs a release            ", ConsoleColor.Yellow);
+        Logger.WriteLine("  h, help                                                                            Print help message            ", ConsoleColor.Yellow);
+        Logger.WriteLine("  l, list                                                                            List all repositories         ", ConsoleColor.Yellow);
+        Logger.WriteLine("  i, install <(repository) (user) (path)> <\"l\"/\"latest\">                             Install a release             ", ConsoleColor.Yellow);
         Logger.WriteLine("     Optional arguments:                                                                                           ", ConsoleColor.Yellow);
         Logger.WriteLine("      (repository) = Repository name, (user) = User name, (path) = Installation path                               ", ConsoleColor.Yellow);
-        Logger.WriteLine("      \"l\" = Select latest version without asking                                                                   ", ConsoleColor.Yellow);
-        Logger.WriteLine("  r, remove <(repository)>                                                             Removes an installation       ", ConsoleColor.Yellow);
+        Logger.WriteLine("      \"l\"/\"latest\" = Select latest version without asking                                                          ", ConsoleColor.Yellow);
+        Logger.WriteLine("  u, update                                                                          Download updated indexes      ", ConsoleColor.Yellow);
+        Logger.WriteLine("  p, upgrade <\"a\"/\"all\">                                                             Upgrade installations         ", ConsoleColor.Yellow);
+        Logger.WriteLine("     Optional arguments:                                                                                           ", ConsoleColor.Yellow);
+        Logger.WriteLine("      \"a\"/\"all\" = Upgrade everything without asking for confirmation                                               ", ConsoleColor.Yellow);
+        Logger.WriteLine("  r, remove <(repository)>                                                           Removes an installation     ", ConsoleColor.Yellow);
         Logger.WriteLine("     Optional arguments:                                                                                           ", ConsoleColor.Yellow);
         Logger.WriteLine("      (repository) = Repository name                                                                               ", ConsoleColor.Yellow);
         Logger.WriteLine("<> = Optional argument \"\" = Literal string without quotation marks                                                 ", ConsoleColor.Cyan);
+        Logger.WriteLine();
     }
     public static void List() {
         Repositories repositories;
@@ -117,37 +126,6 @@ public class Program {
                     catch(Exception e) {
                         Logger.WriteLine("Error while parsing version, exception: " + e, ConsoleColor.Red);
                     }
-                    Logger.WriteLine();
-                }
-            }
-        }
-    }
-    public static void Update() {
-        Repositories repositories;
-        //Get repositories index (github-updater.repositories.json)
-        try {repositories = JsonManager.ReadRepositoriesIndex();}
-        catch(Exception e) {
-            Logger.WriteLine("Error while parsing repositories index, exception: " + e, ConsoleColor.Red);
-            return;
-        }
-        //github-updater repository
-        if(repositories.updater == null || repositories.updater.repository == null || repositories.updater.user == null) return;
-        Logger.WriteLine("  Repository: " + repositories.updater.repository, ConsoleColor.Cyan);
-        Logger.WriteLine("  User:       " + repositories.updater.user, ConsoleColor.Cyan);
-        Client.DownloadIndex(repositories.updater.user, repositories.updater.repository);
-        Logger.WriteLine();
-        //External repositories
-        if(repositories.repositories == null || repositories.repositories.Length == 0)
-            Logger.WriteLine("0 External repositories found", ConsoleColor.Yellow);
-        else {
-            Logger.WriteLine(repositories.repositories.Length.ToString() + " External repositor"
-                + ((repositories.repositories.Length == 1) ? "y" : "ies") + " found: ", ConsoleColor.Green);
-            Logger.WriteLine();
-            foreach(Repository item in repositories.repositories) {
-                if(item.repository != null && item.user != null) {
-                    Logger.WriteLine("  Repository: " + item.repository, ConsoleColor.Blue);
-                    Logger.WriteLine("  User:       " + item.user, ConsoleColor.Blue);
-                    Client.DownloadIndex(item.user, item.repository);
                     Logger.WriteLine();
                 }
             }
@@ -212,7 +190,40 @@ public class Program {
         catch(Exception e) {Logger.WriteLine(e.ToString(), ConsoleColor.Red);}
         Logger.WriteLine();
     }
+    public static void Update() {
+        Repositories repositories;
+        //Get repositories index (github-updater.repositories.json)
+        try {repositories = JsonManager.ReadRepositoriesIndex();}
+        catch(Exception e) {
+            Logger.WriteLine("Error while parsing repositories index, exception: " + e, ConsoleColor.Red);
+            return;
+        }
+        //github-updater repository
+        if(repositories.updater == null || repositories.updater.repository == null || repositories.updater.user == null) return;
+        Logger.WriteLine("  Repository: " + repositories.updater.repository, ConsoleColor.Cyan);
+        Logger.WriteLine("  User:       " + repositories.updater.user, ConsoleColor.Cyan);
+        Client.DownloadIndex(repositories.updater.user, repositories.updater.repository);
+        Logger.WriteLine();
+        //External repositories
+        if(repositories.repositories == null || repositories.repositories.Length == 0)
+            Logger.WriteLine("0 External repositories found", ConsoleColor.Yellow);
+        else {
+            Logger.WriteLine(repositories.repositories.Length.ToString() + " External repositor"
+                + ((repositories.repositories.Length == 1) ? "y" : "ies") + " found: ", ConsoleColor.Green);
+            Logger.WriteLine();
+            foreach(Repository item in repositories.repositories) {
+                if(item.repository != null && item.user != null) {
+                    Logger.WriteLine("  Repository: " + item.repository, ConsoleColor.Blue);
+                    Logger.WriteLine("  User:       " + item.user, ConsoleColor.Blue);
+                    Client.DownloadIndex(item.user, item.repository);
+                    Logger.WriteLine();
+                }
+            }
+        }
+    }
+    public static void Upgrade(UpgradeArguments args) {
 
+    }
     public static void Remove(RemoveArguments args) {
         Repositories repositories;
         Repository repository = new Repository();
