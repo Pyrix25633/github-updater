@@ -1,7 +1,9 @@
 {
     "latest": "0.1.0",
     "keep": [
-        "index/"
+        "index/",
+        "github-updater.temp/",
+        "programs/"
     ],
     "versions": [
         {

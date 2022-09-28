@@ -17,7 +17,9 @@ public class Arguments {
 
     /// <summary>
     /// Function to parse the arguments
+    /// (<paramref name="args"/>)
     /// </summary>
+    /// <param name="args">The array of string arguments</param>
     public void Parse(string[] args) {
         Int16 length = (Int16)args.Length;
         if(length == 0) {
@@ -56,7 +58,7 @@ public class Arguments {
                 case "upgrade":
                     command = Command.Upgrade;
                     if(length - i >= 2) {
-                        upgradeArguments.all = (args[i + 1] == "a") || (args[i + 1] == "all");
+                        upgradeArguments.everything = (args[i + 1] == "e") || (args[i + 1] == "everything");
                         i = length;
                     }
                     break;
@@ -97,9 +99,9 @@ public class InstallArguments {
 
 public class UpgradeArguments {
     public UpgradeArguments() {
-        all = null;
+        everything = null;
     }
-    public bool? all;
+    public bool? everything;
 }
 
 public class RemoveArguments {

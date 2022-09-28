@@ -32,9 +32,8 @@ public class Client {
                     }
                 }
             }
-            if(File.Exists(file)) {
+            if(File.Exists(file))
                 File.Delete(file);
-            }
             File.Move(tempFile, file);
             Logger.WriteLine("  Succesfully downloaded index from " + user + "/" + repository, ConsoleColor.Green);
             return true;
@@ -61,8 +60,10 @@ public class Client {
         if(repository.path == null) repository.path = GetFullPathFromExecutable("programs/" + repository.repository);
         if(!Directory.Exists(repository.path)) {
             try {
+                Logger.WriteLine("  Warning, directory " + repository.path + " does not exist, attempting creation...", ConsoleColor.Yellow);
                 Directory.CreateDirectory(repository.path);
                 freshInstall = true;
+                Logger.WriteLine("  Succesfully created " + repository.path, ConsoleColor.Green);
             }
             catch(Exception e) {throw(new Exception("Error while attempting directory creation, exception: " + e));}
         }
@@ -80,7 +81,7 @@ public class Client {
                 Logger.Write("[" + item.tag + "] ", ConsoleColor.Cyan);
             }
             Logger.WriteLine();
-            Logger.Write("Insert the version you want to download (\"l\" will default to the latest version): ", ConsoleColor.Blue);
+            Logger.Write("Insert the version you want to download (\"l\" will default to the latest version): ", ConsoleColor.DarkBlue);
             do {
                 repository.version = Logger.ReadString();
                 if(!IsValidTag(index, repository.version) && repository.version != "l")
@@ -88,7 +89,7 @@ public class Client {
             } while(!IsValidTag(index, repository.version) && repository.version != "l");
         }
         else {
-            Logger.Write("Version:    ", ConsoleColor.Blue);
+            Logger.Write("Version:    ", ConsoleColor.DarkBlue);
             Logger.WriteLine(index.latest, ConsoleColor.White);
             repository.version = "l";
         }
@@ -117,7 +118,7 @@ public class Client {
         if(release.linux != null) Logger.WriteLine("  [L]: " + release.linux, ConsoleColor.Cyan);
         if(release.win != null) Logger.WriteLine("  [W]: " + release.win, ConsoleColor.Cyan);
         if(release.cross != null) Logger.WriteLine("  [C]: " + release.cross, ConsoleColor.Cyan);
-        Logger.Write("Chose a release file: ", ConsoleColor.Blue);
+        Logger.Write("Chose a release file: ", ConsoleColor.DarkBlue);
         char r;
         do {
             r = Logger.ReadChar();
@@ -157,7 +158,7 @@ public class Client {
         }
         //Downloading the file
         try {
-            Logger.WriteLine("Downloading release file, operation may take some time...", ConsoleColor.Yellow);
+            Logger.WriteLine("  Downloading release file, operation may take some time...", ConsoleColor.Yellow);
             using (var client = new HttpClient()) {
                 using (var s = client.GetStreamAsync(url)) {
                     using (var fs = new FileStream(tempFile, FileMode.Create)) {
@@ -166,7 +167,7 @@ public class Client {
                 }
             }
             File.Move(tempFile, file);
-            Logger.WriteLine("Release file succesfully downloaded", ConsoleColor.Green);
+            Logger.WriteLine("  Release file succesfully downloaded", ConsoleColor.Green);
         }
         catch(Exception e) {
             File.Delete(tempFile);
@@ -175,12 +176,12 @@ public class Client {
         if(releaseFile.EndsWith(".zip")) {
             //Deleting content except entries listed in the keep array
             if(!freshInstall) {
-                Logger.WriteLine("Deleting unnecessary files...", ConsoleColor.Yellow);
+                Logger.WriteLine("  Deleting unnecessary files...", ConsoleColor.Yellow);
                 DeleteExceptKeep(repository.path, index.keep);
-                Logger.WriteLine("Unnecessary files deleted", ConsoleColor.Green);
+                Logger.WriteLine("  Unnecessary files deleted", ConsoleColor.Green);
             }
             //Decompress zip
-            Logger.WriteLine("Extracting release file with zip, operation may take some time...", ConsoleColor.Yellow);
+            Logger.WriteLine("  Extracting release file with zip, operation may take some time...", ConsoleColor.Yellow);
             string tempExtractionDir = tempDir + "/" + releaseFile.Substring(0, releaseFile.Length - 4);
             try {
                 Directory.CreateDirectory(tempExtractionDir);
@@ -191,22 +192,22 @@ public class Client {
             }
             try {ZipFile.ExtractToDirectory(file, tempExtractionDir);}
             catch(Exception e) {throw(new Exception("Error while extracting the release file with zip, exception: " + e));}
-            Logger.WriteLine("Release extracted", ConsoleColor.Green);
-            if(freshInstall) Logger.WriteLine("Installing...", ConsoleColor.Yellow);
-            else Logger.WriteLine("Upgrading...", ConsoleColor.Yellow);
+            Logger.WriteLine("  Release extracted", ConsoleColor.Green);
+            if(freshInstall) Logger.WriteLine("  Installing...", ConsoleColor.Yellow);
+            else Logger.WriteLine("  Upgrading...", ConsoleColor.Yellow);
             CopyExceptKeep(tempExtractionDir, repository.path, index.keep, freshInstall);
-            if(freshInstall) Logger.WriteLine("Succesfully installed " + repository.repository + " " + repository.version, ConsoleColor.Green);
-            else Logger.WriteLine("Succesfully upgraded " + repository.repository + " to " + repository.version, ConsoleColor.Green);
+            if(freshInstall) Logger.WriteLine("  Succesfully installed " + repository.repository + " " + repository.version, ConsoleColor.Green);
+            else Logger.WriteLine("  Succesfully upgraded " + repository.repository + " to " + repository.version, ConsoleColor.Green);
         }
         else if(releaseFile.EndsWith(".tar.gz")) {
             //Deleting content except entries listed in the keep array
             if(!freshInstall) {
-                Logger.WriteLine("Deleting unnecessary files...", ConsoleColor.Yellow);
+                Logger.WriteLine("  Deleting unnecessary files...", ConsoleColor.Yellow);
                 DeleteExceptKeep(repository.path, index.keep);
-                Logger.WriteLine("Unnecessary files deleted", ConsoleColor.Green);
+                Logger.WriteLine("  Unnecessary files deleted", ConsoleColor.Green);
             }
             //Decompress tar.gz
-            Logger.WriteLine("Extacting release file with tar and gzip, operation may take some time...", ConsoleColor.Yellow);
+            Logger.WriteLine("  Extacting release file with tar and gzip, operation may take some time...", ConsoleColor.Yellow);
             string tempExtractionDir = tempDir + "/" + releaseFile.Substring(0, releaseFile.Length - 7);
             try {
                 Directory.CreateDirectory(tempExtractionDir);
@@ -217,15 +218,22 @@ public class Client {
             }
             try {ExtractTarGz(file, tempExtractionDir);}
             catch(Exception e) {throw(new Exception("Error while extracting the release file with tar and gzip, exception: " + e));}
-            Logger.WriteLine("Release extracted", ConsoleColor.Green);
-            if(freshInstall) Logger.WriteLine("Installing...", ConsoleColor.Yellow);
-            else Logger.WriteLine("Upgrading...", ConsoleColor.Yellow);
+            Logger.WriteLine("  Release extracted", ConsoleColor.Green);
+            if(freshInstall) Logger.WriteLine("  Installing...", ConsoleColor.Yellow);
+            else Logger.WriteLine("  Upgrading...", ConsoleColor.Yellow);
             CopyExceptKeep(tempExtractionDir, repository.path, index.keep, freshInstall);
-            if(freshInstall) Logger.WriteLine("Succesfully installed " + repository.repository + " " + repository.version, ConsoleColor.Green);
-            else Logger.WriteLine("Succesfully upgraded " + repository.repository + " to " + repository.version, ConsoleColor.Green);
+            if(freshInstall) Logger.WriteLine("  Succesfully installed " + repository.repository + " " + repository.version, ConsoleColor.Green);
+            else Logger.WriteLine("  Succesfully upgraded " + repository.repository + " to " + repository.version, ConsoleColor.Green);
         }
         else {
-            try {if(repository.path != null) File.Move(file, repository.path + "/" + releaseFile);}
+            try {
+                if(repository.path != null) {
+                    File.Move(file, repository.path + "/" + releaseFile);
+                    if(freshInstall) Logger.WriteLine("  Succesfully installed " + repository.repository + " " + repository.version, ConsoleColor.Green);
+                    else Logger.WriteLine("  Succesfully upgraded " + repository.repository + " to " + repository.version, ConsoleColor.Green);
+                }
+                else throw(new NullReferenceException("Null repository path"));
+            }
             catch(Exception e) {Logger.WriteLine("Could not copy file " + file + ", exception: " + e, ConsoleColor.Red);}
         }
         EmptyTemporaryDirectory();
@@ -283,6 +291,9 @@ public class Client {
         enumOptions.RecurseSubdirectories = true; enumOptions.AttributesToSkip = default;
         string[] filesToDelete = new string[0];
         if(keep != null && keep.Length > 0) {
+            if(path == GetFullPathFromExecutable()) {
+                keep = keep.Append("ICSharpCode.SharpZipLib.dll").ToArray();
+            }
             string[] filesToKeep = GetFilesToKeep(path, keep, enumOptions);
             filesToDelete = Directory.GetFileSystemEntries(path, "*", enumOptions).Except(filesToKeep).Reverse().ToArray();
         }
@@ -290,12 +301,14 @@ public class Client {
             filesToDelete = Directory.GetFileSystemEntries(path, "*", enumOptions).Reverse().ToArray();
         foreach(string item in filesToDelete) {
             FileInfo info = new FileInfo(item);
-            if((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
+            if((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory) {
                 try {Directory.Delete(item);}
                 catch(Exception e) {Logger.WriteLine("Could not remove directory " + item + ", exception: " + e, ConsoleColor.Red);}
-            else
+            }
+            else {
                 try {File.Delete(item);}
                 catch(Exception e) {Logger.WriteLine("Could not remove file " + item + ", exception: " + e, ConsoleColor.Red);}
+            }
         }
     }
     /// <summary>
@@ -328,7 +341,7 @@ public class Client {
                 catch(Exception e) {Logger.WriteLine("Could not create directory " + item + ", exception: " + e, ConsoleColor.Red);}
             }
             else {
-                try {File.Move(item, destinationPath);}
+                try {File.Move(item, destinationPath, true);}
                 catch(Exception e) {Logger.WriteLine("Could not copy file " + item + ", exception: " + e, ConsoleColor.Red);}
             }
         }
@@ -411,18 +424,20 @@ public class Client {
     /// </summary>
     public static void EmptyTemporaryDirectory() {
         string tempDir = GetFullPathFromExecutable("github-updater.temp");
+        if(!Directory.Exists(tempDir)) return;
         EnumerationOptions enumOptions = new EnumerationOptions();
         enumOptions.RecurseSubdirectories = true; enumOptions.AttributesToSkip = default;
         string[] filesToDelete = Directory.GetFileSystemEntries(tempDir, "*", enumOptions).Reverse().ToArray();
         foreach(string item in filesToDelete) {
             FileInfo info = new FileInfo(item);
-
-            if((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
+            if((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory) {
                 try {Directory.Delete(item);}
                 catch(Exception e) {Logger.WriteLine("Could not remove directory " + item + ", exception: " + e);}
-            else
+            }
+            else {
                 try {File.Delete(item);}
                 catch(Exception e) {Logger.WriteLine("Could not remove file " + item + ", exception: " + e);}
+            }
         }
     }
     /// <summary>
@@ -482,15 +497,20 @@ public class Client {
         if(path == "") return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "";
         return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + Path.DirectorySeparatorChar + path;
     }
-    public static T[] RemoveAt<T>(T[] source, Int32 index) {
-        Int32 lenght = source.Length;
+    /// <summary>
+    /// Function to remove an element from an array
+    /// (<paramref name="source"/>, <paramref name="index"/>)
+    /// </summary>
+    /// <param name="source">The source array</param>
+    /// <param name="index">The position of the element to remove</param>
+    /// <returns>The array without that element</returns>
+    public static T[] RemoveAt<T>(T[] source, int index) {
+        int lenght = source.Length;
         T[] dest = new T[lenght - 1];
         if( index > 0 )
             Array.Copy(source, 0, dest, 0, index);
-
         if( index < lenght - 1 )
             Array.Copy(source, index + 1, dest, index, lenght - index - 1);
-
         return dest;
     }
 }
