@@ -156,7 +156,7 @@ public class Program {
             Logger.Write("User:       ", ConsoleColor.DarkBlue); Logger.WriteLine(repository.user, ConsoleColor.White);
             Logger.Write("Path:       ", ConsoleColor.DarkBlue); Logger.WriteLine(repository.path, ConsoleColor.White);
         }
-        if(repository.path == "./" || repository.path == ".") repository.path = null;
+        if(repository.path == "./" || repository.path == "." || repository.path == "\\.") repository.path = null;
         //Downloading the index
         if(!Client.DownloadIndex(repository.user, repository.repository)) {
             Logger.WriteLine("Error, either the repository doesn't have a github-updater." + repository.repository + ".json file, "

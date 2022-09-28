@@ -7,7 +7,7 @@ public class JsonManager {
     /// <returns>The chosen release item</returns>
     public static Repositories ReadRepositoriesIndex() {
         Repositories repositories = new Repositories();
-        string index = Client.GetFullPathFromExecutable("index/github-updater.repositories.json");
+        string index = Client.GetFullPathFromExecutable("index" + Path.DirectorySeparatorChar + "github-updater.repositories.json");
         if(File.Exists(index)) {
             try {
                 Repositories? temp;
@@ -32,8 +32,8 @@ public class JsonManager {
             repositories.updater.path = Client.GetFullPathFromExecutable();
             repositories.updater.version = Program.version;
             string indexDirectory = Client.GetFullPathFromExecutable("index");
-            string repositoriesDirectory = indexDirectory + "/repositories";
-            string githubUpdaterIndex = repositoriesDirectory + "/github-updater.github-updater.json";
+            string repositoriesDirectory = indexDirectory + Path.DirectorySeparatorChar + "repositories";
+            string githubUpdaterIndex = repositoriesDirectory + Path.DirectorySeparatorChar + "github-updater.github-updater.json";
             if(!Directory.Exists(indexDirectory))
                 Directory.CreateDirectory(indexDirectory);
             if(!Directory.Exists(repositoriesDirectory))
@@ -51,8 +51,8 @@ public class JsonManager {
     /// </summary>
     /// <param name="repositories">The repositories object</param>
     public static void WriteRepositoriesIndex(Repositories repositories) {
-        string tempFile = "index/github-updater.repositories.temp.json";
-        string file = "index/github-updater.repositories.json";
+        string tempFile = "index" + Path.DirectorySeparatorChar + "github-updater.repositories.temp.json";
+        string file = "index" + Path.DirectorySeparatorChar + "github-updater.repositories.json";
         try {
             File.WriteAllText(Client.GetFullPathFromExecutable(tempFile),
                 JsonConvert.SerializeObject(repositories, Formatting.Indented));
@@ -74,7 +74,7 @@ public class JsonManager {
         Index index = new Index();
         Index? temp;
         string fileContent = File.ReadAllText(
-            Client.GetFullPathFromExecutable("index/repositories/github-updater." + repository + ".json"));
+            Client.GetFullPathFromExecutable("index" + Path.DirectorySeparatorChar + "repositories" + Path.DirectorySeparatorChar + "github-updater." + repository + ".json"));
         temp = JsonConvert.DeserializeObject<Index>(fileContent);
         if(temp != null) {
             index = temp;

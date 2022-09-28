@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.IO.Compression;
 using System.Text;
+using System.Security.AccessControl;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Tar;
 using ICSharpCode.SharpZipLib.GZip;
@@ -15,10 +16,11 @@ public class Client {
     /// <returns>True if the download succedeed</returns>
     public static bool DownloadIndex(string user, string repository) {
         string url = "https://raw.githubusercontent.com/" + user + "/" + repository + "/main/github-updater." + repository + ".json";
-        string file = GetFullPathFromExecutable("index/repositories/github-updater." + repository + ".json");
+        string file = GetFullPathFromExecutable("index" + Path.DirectorySeparatorChar + "repositories" + Path.DirectorySeparatorChar +
+            "github-updater." + repository + ".json");
         string tempFile = file + ".temp";
-        if(!Directory.Exists("index/repositories")) {
-            try {Directory.CreateDirectory(GetFullPathFromExecutable("index/repositories"));}
+        if(!Directory.Exists("index" + Path.DirectorySeparatorChar + "repositories")) {
+            try {Directory.CreateDirectory(GetFullPathFromExecutable("index" + Path.DirectorySeparatorChar + "repositories"));}
             catch(Exception e) {
                 Logger.WriteLine("Error creating folder for repositories indexes, exception: " + e, ConsoleColor.Red);
                 return false;
@@ -35,11 +37,11 @@ public class Client {
             if(File.Exists(file))
                 File.Delete(file);
             File.Move(tempFile, file);
-            Logger.WriteLine("  Succesfully downloaded index from " + user + "/" + repository, ConsoleColor.Green);
+            Logger.WriteLine("  Succesfully downloaded index from " + user + Path.DirectorySeparatorChar + repository, ConsoleColor.Green);
             return true;
         }
         catch(Exception e) {
-            Logger.WriteLine("  Error dowloading index from " + user + "/" + repository + ", exception: " + e, ConsoleColor.Red);
+            Logger.WriteLine("  Error dowloading index from " + user + Path.DirectorySeparatorChar + repository + ", exception: " + e, ConsoleColor.Red);
             try {File.Delete(tempFile);}
             catch(Exception) {}
             return false;
@@ -147,7 +149,7 @@ public class Client {
         string url = "https://github.com/" + repository.user + "/" + repository.repository + "/releases/download/"
             + repository.version + "/" + releaseFile;
         string tempDir = GetFullPathFromExecutable("github-updater.temp");
-        string file = tempDir + "/" + releaseFile;
+        string file = tempDir + Path.DirectorySeparatorChar + releaseFile;
         string tempFile = file + ".temp";
         //Checking temporary directory
         if(!Directory.Exists(tempDir)) {
@@ -182,7 +184,7 @@ public class Client {
             }
             //Decompress zip
             Logger.WriteLine("  Extracting release file with zip, operation may take some time...", ConsoleColor.Yellow);
-            string tempExtractionDir = tempDir + "/" + releaseFile.Substring(0, releaseFile.Length - 4);
+            string tempExtractionDir = tempDir + Path.DirectorySeparatorChar + releaseFile.Substring(0, releaseFile.Length - 4);
             try {
                 Directory.CreateDirectory(tempExtractionDir);
             }
@@ -208,7 +210,7 @@ public class Client {
             }
             //Decompress tar.gz
             Logger.WriteLine("  Extacting release file with tar and gzip, operation may take some time...", ConsoleColor.Yellow);
-            string tempExtractionDir = tempDir + "/" + releaseFile.Substring(0, releaseFile.Length - 7);
+            string tempExtractionDir = tempDir + Path.DirectorySeparatorChar + releaseFile.Substring(0, releaseFile.Length - 7);
             try {
                 Directory.CreateDirectory(tempExtractionDir);
             }
@@ -228,7 +230,7 @@ public class Client {
         else {
             try {
                 if(repository.path != null) {
-                    File.Move(file, repository.path + "/" + releaseFile);
+                    File.Move(file, repository.path + Path.DirectorySeparatorChar + releaseFile);
                     if(freshInstall) Logger.WriteLine("  Succesfully installed " + repository.repository + " " + repository.version, ConsoleColor.Green);
                     else Logger.WriteLine("  Succesfully upgraded " + repository.repository + " to " + repository.version, ConsoleColor.Green);
                 }
@@ -259,7 +261,6 @@ public class Client {
         byte[] dataBuffer = new byte[4096];
         using(System.IO.Stream fs = new FileStream(inputFile, FileMode.Open, FileAccess.Read)) {
             using(GZipInputStream gzipStream = new GZipInputStream(fs)) {
-                // Change this to your needs
                 using(FileStream fsOut = File.Create(outputFile)) {
                     StreamUtils.Copy(gzipStream, fsOut, dataBuffer);
                 }
@@ -332,7 +333,7 @@ public class Client {
             filesToCopy = Directory.GetFileSystemEntries(source, "*", enumOptions).ToArray();
         foreach(string item in filesToCopy) {
             FileInfo info = new FileInfo(item);
-            string destinationPath = destination + "/" + item.Substring(source.Length + 1);
+            string destinationPath = destination + Path.DirectorySeparatorChar + item.Substring(source.Length + 1);
             if((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory) {
                 try {
                     if(!Directory.Exists(destinationPath))
@@ -345,6 +346,7 @@ public class Client {
                 catch(Exception e) {Logger.WriteLine("Could not copy file " + item + ", exception: " + e, ConsoleColor.Red);}
             }
         }
+        if(Path.DirectorySeparatorChar != '\\') Mono.Unix.Native.Syscall.chmod(destination + "/*", Mono.Unix.Native.FilePermissions.ACCESSPERMS);
     }
     /// <summary>
     /// Function to get the list of files to keep
@@ -370,7 +372,7 @@ public class Client {
                 catch(Exception) {}
             }
             else
-                info = new FileInfo(path + "/" + item);
+                info = new FileInfo(path + Path.DirectorySeparatorChar + item);
             if(info != null) { //Normal folder or file
                 if(Directory.Exists(info.FullName) && (info.Attributes & FileAttributes.Directory) == FileAttributes.Directory) {
                     try {

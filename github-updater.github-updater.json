@@ -5,7 +5,7 @@
         "github-updater.temp/",
         "programs/"
     ],
-    "versions": [
+    "releases": [
         {
             "tag": "0.1.0",
             "linux": "github-updater-0.1.0-linux-x64.tar.gz",
