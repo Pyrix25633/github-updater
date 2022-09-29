@@ -5,7 +5,9 @@ test/
 index/repositories/
 programs/
 github-updater.temp/
+runtimes/
 *.dll
+*.so
 *.pdb
 *.deps.json
 *.runtimeconfig.json

@@ -57,7 +57,7 @@ public class JsonManager {
             File.WriteAllText(Client.GetFullPathFromExecutable(tempFile),
                 JsonConvert.SerializeObject(repositories, Formatting.Indented));
             File.Delete(file);
-            File.Move(tempFile, file);
+            Client.Move(tempFile, file);
         }
         catch (Exception e) {
             File.Delete(tempFile);

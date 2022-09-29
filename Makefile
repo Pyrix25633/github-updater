@@ -1,6 +1,6 @@
 .RECIPEPREFIX=>
 VERSION=0.0.1
-COMMAND=help
+COMMAND=install
 
 default:
 > clear
@@ -35,6 +35,8 @@ run-dotnet-local:
 > cp ./bin/debug/net6.0/github-updater.deps.json ./
 > cp ./bin/debug/net6.0/Newtonsoft.Json.dll ./
 > cp ./bin/debug/net6.0/ICSharpCode.SharpZipLib.dll ./
+> cp ./bin/debug/net6.0/runtimes/linux-x64/lib/netstandard2.0/Mono.Posix.NETStandard.dll ./
+> cp ./bin/debug/net6.0/runtimes/linux-x64/native/libMonoPosixHelper.so ./
 > dotnet ./github-updater.dll -- $(COMMAND)
 
 run-dotnet-release:

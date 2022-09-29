@@ -160,7 +160,7 @@ public class Program {
         //Downloading the index
         if(!Client.DownloadIndex(repository.user, repository.repository)) {
             Logger.WriteLine("Error, either the repository doesn't have a github-updater." + repository.repository + ".json file, "
-            + "or the repository doesn't exist");
+            + "the repository doesn't exist or another error occourred", ConsoleColor.Red);
             return;
         }
         //Reading the index
@@ -243,7 +243,6 @@ public class Program {
         Logger.Write("  Repository:     ", ConsoleColor.DarkBlue); Logger.WriteLine(repositories.updater.repository, ConsoleColor.Cyan);
         Logger.Write("  User:           ", ConsoleColor.DarkBlue); Logger.WriteLine(repositories.updater.user, ConsoleColor.Cyan);
         Logger.Write("  Path:           ", ConsoleColor.DarkBlue); Logger.WriteLine(repositories.updater.path, ConsoleColor.Cyan);
-        Logger.Write("  Latest version: ", ConsoleColor.DarkBlue); Logger.WriteLine(index.latest, ConsoleColor.Cyan);
         Logger.Write("  Local version:  ", ConsoleColor.DarkBlue); Logger.Write(repositories.updater.version + " ", ConsoleColor.Cyan);
         Version latest = new Version(), local = new Version();
         bool outdated = false, update = false;
@@ -289,7 +288,6 @@ public class Program {
                     Logger.Write("  Repository:     ", ConsoleColor.DarkBlue); Logger.WriteLine(item.repository, ConsoleColor.Cyan);
                     Logger.Write("  User:           ", ConsoleColor.DarkBlue); Logger.WriteLine(item.user, ConsoleColor.Cyan);
                     Logger.Write("  Path:           ", ConsoleColor.DarkBlue); Logger.WriteLine(item.path, ConsoleColor.Cyan);
-                    Logger.Write("  Latest version: ", ConsoleColor.DarkBlue); Logger.WriteLine(index.latest, ConsoleColor.Cyan);
                     Logger.Write("  Local version:  ", ConsoleColor.DarkBlue); Logger.Write(item.version + " ", ConsoleColor.Cyan);
                     outdated = false;
                     try {
@@ -375,5 +373,6 @@ public class Program {
             Logger.WriteLine("  Succesfully removed installation from " + repository.path, ConsoleColor.Green);
         }
         catch(Exception e) {Logger.WriteLine("Error while attempting to remove installation, exception: " + e, ConsoleColor.Red);}
+        Logger.WriteLine();
     }
 }

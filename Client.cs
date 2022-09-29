@@ -1,10 +1,10 @@
 using System.Reflection;
 using System.IO.Compression;
 using System.Text;
-using System.Security.AccessControl;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Tar;
 using ICSharpCode.SharpZipLib.GZip;
+using Mono.Unix.Native;
 
 public class Client {
     /// <summary>
@@ -34,14 +34,12 @@ public class Client {
                     }
                 }
             }
-            if(File.Exists(file))
-                File.Delete(file);
-            File.Move(tempFile, file);
+            Move(tempFile, file, true);
             Logger.WriteLine("  Succesfully downloaded index from " + user + Path.DirectorySeparatorChar + repository, ConsoleColor.Green);
             return true;
         }
         catch(Exception e) {
-            Logger.WriteLine("  Error dowloading index from " + user + Path.DirectorySeparatorChar + repository + ", exception: " + e, ConsoleColor.Red);
+            Logger.WriteLine("Error dowloading index from " + user + Path.DirectorySeparatorChar + repository + ", exception: " + e, ConsoleColor.Red);
             try {File.Delete(tempFile);}
             catch(Exception) {}
             return false;
@@ -120,13 +118,16 @@ public class Client {
         if(release.linux != null) Logger.WriteLine("  [L]: " + release.linux, ConsoleColor.Cyan);
         if(release.win != null) Logger.WriteLine("  [W]: " + release.win, ConsoleColor.Cyan);
         if(release.cross != null) Logger.WriteLine("  [C]: " + release.cross, ConsoleColor.Cyan);
-        Logger.Write("Chose a release file: ", ConsoleColor.DarkBlue);
         char r;
-        do {
-            r = Logger.ReadChar();
-            if(!validOptions.Contains(r))
-                Logger.Write("  Not a valid option. New input: ", ConsoleColor.Red);
-        } while(!validOptions.Contains(r));
+        if(filesCount == 1) r = validOptions[0];
+        else {
+            Logger.Write("Chose a release file: ", ConsoleColor.DarkBlue);
+            do {
+                r = Logger.ReadChar();
+                if(!validOptions.Contains(r))
+                    Logger.Write("  Not a valid option. New input: ", ConsoleColor.Red);
+            } while(!validOptions.Contains(r));
+        }
         string? releaseFile = null;
         switch(r) {
             case 'L': releaseFile = release.linux; break;
@@ -168,7 +169,7 @@ public class Client {
                     }
                 }
             }
-            File.Move(tempFile, file);
+            Move(tempFile, file, true);
             Logger.WriteLine("  Release file succesfully downloaded", ConsoleColor.Green);
         }
         catch(Exception e) {
@@ -230,7 +231,9 @@ public class Client {
         else {
             try {
                 if(repository.path != null) {
-                    File.Move(file, repository.path + Path.DirectorySeparatorChar + releaseFile);
+                    if(freshInstall) Logger.WriteLine("  Installing...", ConsoleColor.Yellow);
+                    else Logger.WriteLine("  Upgrading...", ConsoleColor.Yellow);
+                    Move(file, repository.path + Path.DirectorySeparatorChar + releaseFile);
                     if(freshInstall) Logger.WriteLine("  Succesfully installed " + repository.repository + " " + repository.version, ConsoleColor.Green);
                     else Logger.WriteLine("  Succesfully upgraded " + repository.repository + " to " + repository.version, ConsoleColor.Green);
                 }
@@ -294,6 +297,10 @@ public class Client {
         if(keep != null && keep.Length > 0) {
             if(path == GetFullPathFromExecutable()) {
                 keep = keep.Append("ICSharpCode.SharpZipLib.dll").ToArray();
+                keep = keep.Append("Mono.Posix.NETStandard.dll").ToArray();
+                keep = keep.Append("MonoPosixHelper.dll").ToArray();
+                keep = keep.Append("libMonoPosixHelper.dll").ToArray();
+                keep = keep.Append("libMonoPosixHelper.so").ToArray();
             }
             string[] filesToKeep = GetFilesToKeep(path, keep, enumOptions);
             filesToDelete = Directory.GetFileSystemEntries(path, "*", enumOptions).Except(filesToKeep).Reverse().ToArray();
@@ -342,11 +349,10 @@ public class Client {
                 catch(Exception e) {Logger.WriteLine("Could not create directory " + item + ", exception: " + e, ConsoleColor.Red);}
             }
             else {
-                try {File.Move(item, destinationPath, true);}
+                try {Move(item, destinationPath, true);}
                 catch(Exception e) {Logger.WriteLine("Could not copy file " + item + ", exception: " + e, ConsoleColor.Red);}
             }
         }
-        if(Path.DirectorySeparatorChar != '\\') Mono.Unix.Native.Syscall.chmod(destination + "/*", Mono.Unix.Native.FilePermissions.ACCESSPERMS);
     }
     /// <summary>
     /// Function to get the list of files to keep
@@ -441,6 +447,13 @@ public class Client {
                 catch(Exception e) {Logger.WriteLine("Could not remove file " + item + ", exception: " + e);}
             }
         }
+    }
+    public static void Move(string source, string destination, bool overwrite = false) {
+        if(File.Exists(destination)) {
+            if(!overwrite) return;
+            File.Delete(destination);
+        }
+        Syscall.rename(source, destination);
     }
     /// <summary>
     /// Function to see if a tag is valid
