@@ -51,7 +51,7 @@ public class JsonManager {
     /// </summary>
     /// <param name="repositories">The repositories object</param>
     public static void WriteRepositoriesIndex(Repositories repositories) {
-        string tempFile = "index" + Path.DirectorySeparatorChar + "github-updater.repositories.temp.json";
+        string tempFile = "index" + Path.DirectorySeparatorChar + "github-updater.repositories.json.temp";
         string file = "index" + Path.DirectorySeparatorChar + "github-updater.repositories.json";
         try {
             File.WriteAllText(Client.GetFullPathFromExecutable(tempFile),

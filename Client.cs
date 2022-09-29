@@ -448,6 +448,13 @@ public class Client {
             }
         }
     }
+    /// <summary>
+    /// Function to move a file
+    /// (<paramref name="source"/>, <paramref name="destination"/>, <paramref name="overwrite"/>)
+    /// </summary>
+    /// <param name="source">The source</param>
+    /// <param name="destination">The destination</param>
+    /// <param name="overwrite">If true the destination file is overwritten if it exists</param>
     public static void Move(string source, string destination, bool overwrite = false) {
         if(File.Exists(destination)) {
             if(!overwrite) return;
