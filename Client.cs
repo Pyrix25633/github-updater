@@ -317,7 +317,7 @@ public class Client {
         else
             filesToDelete = Directory.GetFileSystemEntries(path, "*", enumOptions).Reverse().ToArray();
         if(Environment.OSVersion.Platform != PlatformID.Unix && path == GetFullPathFromExecutable()) {
-            string self = Path.GetFileName(Assembly.GetExecutingAssembly().Location);
+            string self = Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().Location) + ".exe";
             StreamWriter batFile = new StreamWriter(File.Create("upgrade.bat"));
             batFile.WriteLine("ECHO \"Waiting " + self + "...\"");
             batFile.WriteLine("TIMEOUT /t 1 /nobreak > NUL");
@@ -369,7 +369,7 @@ public class Client {
         else
             filesToCopy = Directory.GetFileSystemEntries(source, "*", enumOptions).ToArray();
         if(Environment.OSVersion.Platform != PlatformID.Unix && destination == GetFullPathFromExecutable()) {
-            string self = Path.GetFileName(Assembly.GetExecutingAssembly().Location);
+            string self = Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().Location) + ".exe";
             StreamWriter batFile = new StreamWriter(File.Open("upgrade.bat", FileMode.Append));
             batFile.WriteLine("ECHO \"Upgrading...\"");
             foreach(string item in filesToCopy) {
