@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.IO.Compression;
 using System.Text;
+using System.Diagnostics;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Tar;
 using ICSharpCode.SharpZipLib.GZip;
@@ -57,7 +58,7 @@ public class Client {
             throw(new NullReferenceException("Null repository exception"));
         bool freshInstall = false;
         //Checking installation path
-        if(repository.path == null) repository.path = GetFullPathFromExecutable("programs/" + repository.repository);
+        if(repository.path == null) repository.path = GetFullPathFromExecutable("programs" + Path.DirectorySeparatorChar + repository.repository);
         if(!Directory.Exists(repository.path)) {
             try {
                 Logger.WriteLine("  Warning, directory " + repository.path + " does not exist, attempting creation...", ConsoleColor.Yellow);
@@ -199,6 +200,10 @@ public class Client {
             if(freshInstall) Logger.WriteLine("  Installing...", ConsoleColor.Yellow);
             else Logger.WriteLine("  Upgrading...", ConsoleColor.Yellow);
             CopyExceptKeep(tempExtractionDir, repository.path, index.keep, freshInstall);
+            if(Program.exitingBecauseUpgrading) {
+                Logger.WriteLine("  Launching upgrader...", ConsoleColor.Yellow);
+                return;
+            }
             if(freshInstall) Logger.WriteLine("  Succesfully installed " + repository.repository + " " + repository.version, ConsoleColor.Green);
             else Logger.WriteLine("  Succesfully upgraded " + repository.repository + " to " + repository.version, ConsoleColor.Green);
         }
@@ -225,6 +230,10 @@ public class Client {
             if(freshInstall) Logger.WriteLine("  Installing...", ConsoleColor.Yellow);
             else Logger.WriteLine("  Upgrading...", ConsoleColor.Yellow);
             CopyExceptKeep(tempExtractionDir, repository.path, index.keep, freshInstall);
+            if(Program.exitingBecauseUpgrading) {
+                Logger.WriteLine("  Launching upgrader...", ConsoleColor.Yellow);
+                return;
+            }
             if(freshInstall) Logger.WriteLine("  Succesfully installed " + repository.repository + " " + repository.version, ConsoleColor.Green);
             else Logger.WriteLine("  Succesfully upgraded " + repository.repository + " to " + repository.version, ConsoleColor.Green);
         }
@@ -307,6 +316,27 @@ public class Client {
         }
         else
             filesToDelete = Directory.GetFileSystemEntries(path, "*", enumOptions).Reverse().ToArray();
+        if(Environment.OSVersion.Platform != PlatformID.Unix && path == GetFullPathFromExecutable()) {
+            string self = Path.GetFileName(Assembly.GetExecutingAssembly().Location);
+            StreamWriter batFile = new StreamWriter(File.Create("upgrade.bat"));
+            batFile.WriteLine("ECHO \"Waiting " + self + "...\"");
+            batFile.WriteLine("TIMEOUT /t 1 /nobreak > NUL");
+            batFile.WriteLine("ECHO \"Killing " + self + "...\"");
+            batFile.WriteLine("TASKKILL /F /IM \"{0}\" > NUL", self);
+            batFile.WriteLine("ECHO \"Removing unnecessary files...\"");
+            foreach(string item in filesToDelete) {
+                FileInfo info = new FileInfo(item);
+                if((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory) {
+                    batFile.WriteLine("RMDIR /S /Q " + item);
+                }
+                else {
+                    batFile.WriteLine("DEL /Q " + item);
+                }
+            }
+            batFile.WriteLine("ECHO \"Unnecessary files removed\"");
+            batFile.Close();
+            return;
+        }
         foreach(string item in filesToDelete) {
             FileInfo info = new FileInfo(item);
             if((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory) {
@@ -338,6 +368,32 @@ public class Client {
         }
         else
             filesToCopy = Directory.GetFileSystemEntries(source, "*", enumOptions).ToArray();
+        if(Environment.OSVersion.Platform != PlatformID.Unix && destination == GetFullPathFromExecutable()) {
+            string self = Path.GetFileName(Assembly.GetExecutingAssembly().Location);
+            StreamWriter batFile = new StreamWriter(File.Open("upgrade.bat", FileMode.Append));
+            batFile.WriteLine("ECHO \"Upgrading...\"");
+            foreach(string item in filesToCopy) {
+                FileInfo info = new FileInfo(item);
+                string destinationPath = destination + Path.DirectorySeparatorChar + item.Substring(source.Length + 1);
+                if((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory) {
+                    if(!Directory.Exists(destinationPath))
+                        batFile.WriteLine("MKDIR " + destinationPath);
+                }
+                else {
+                    batFile.WriteLine("MOVE /Y " + item + " " + destinationPath);
+                }
+            }
+            batFile.WriteLine("ECHO \"Succesfully upgraded\"");
+            batFile.WriteLine(".\\", self, (Program.upgradeEverything ? " e" : ""));
+            batFile.WriteLine("DEL \"%~f0\""); 
+            batFile.WriteLine("CLS");
+            batFile.Close();
+            ProcessStartInfo startInfo = new ProcessStartInfo("upgrade.bat");
+            startInfo.WorkingDirectory = GetFullPathFromExecutable();
+            Process.Start(startInfo);
+            Program.exitingBecauseUpgrading = true;
+            return;
+        }
         foreach(string item in filesToCopy) {
             FileInfo info = new FileInfo(item);
             string destinationPath = destination + Path.DirectorySeparatorChar + item.Substring(source.Length + 1);
@@ -408,8 +464,8 @@ public class Client {
     /// <param name="path">The starting path</param>
     /// <returns>The list of all the directories and the entry</returns>
     public static string[] GetFullDirectoryListToEntry(string entry, string path) {
-        if(path.EndsWith('/')) path = path.Substring(0, path.Length - 1);
-        if(entry.EndsWith('/')) entry = entry.Substring(0, entry.Length - 1);
+        if(path.EndsWith('/') || path.EndsWith('\\')) path = path.Substring(0, path.Length - 1);
+        if(entry.EndsWith('/') || entry.EndsWith('\\')) entry = entry.Substring(0, entry.Length - 1);
         string[] directoryList = {entry};
         path = new FileInfo(path).FullName;
         try {

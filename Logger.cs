@@ -29,9 +29,9 @@ public class Logger {
         string? s;
         do {
             s = Console.ReadLine();
-            if(s == null)
+            if(s == null || s.Length == 0)
                 Write("  The input cannot be null. New input: ", ConsoleColor.Red);
-        } while(s == null);
+        } while(s == null || s.Length == 0);
         return s;
     }
     /// <summary>
@@ -42,9 +42,9 @@ public class Logger {
         string? s;
         do {
             s = Console.ReadLine();
-            if(s == null)
+            if(s == null || s.Length == 0)
                 Write("  The input cannot be null. New input: ", ConsoleColor.Red);
-        } while(s == null);
+        } while(s == null || s.Length == 0);
         return s[0];
     }
     /// <summary>
@@ -56,7 +56,7 @@ public class Logger {
         char c = ' ';
         do {
             s = Console.ReadLine();
-            if(s == null)
+            if(s == null || s.Length == 0)
                 Write("  The input cannot be null. New input: ", ConsoleColor.Red);
             else {
                 c = s[0];
@@ -64,7 +64,7 @@ public class Logger {
                 if(c != 'y' && c != 'n')
                     Write("  Not a valid choice. New input: ", ConsoleColor.Red);
             }
-        } while(s == null && c != 'y' && c!= 'n');
+        } while((s == null || s.Length == 0) || (c != 'y' && c!= 'n'));
         return c == 'y';
     }
 }

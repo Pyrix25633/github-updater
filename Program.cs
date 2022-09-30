@@ -2,6 +2,8 @@ using System;
 
 public class Program {
     public static string version = "0.0.1";
+    public static bool upgradeEverything = false, exitingBecauseUpgrading = false;
+    public static string outdatedSymbol = "", upToDateSymbol = "";
     static void Main(string[] args) {
         //Version
         Logger.WriteLine();
@@ -21,6 +23,13 @@ public class Program {
                 Logger.WriteLine();
                 return;
             }
+        }
+        //Setting chars
+        if(Environment.OSVersion.Platform == PlatformID.Unix) {
+            outdatedSymbol = "✗"; upToDateSymbol = "✓";
+        }
+        else {
+            outdatedSymbol = "x"; upToDateSymbol = "v";
         }
         //Executing the command
         switch(arguments.command) {
@@ -94,9 +103,9 @@ public class Program {
         try {
             latest = new Version(index.latest); local = new Version(repositories.updater.version);
             if(Version.IsOutdated(latest, local))
-                Logger.WriteLine("✗ Outdated", ConsoleColor.Red);
+                Logger.WriteLine(outdatedSymbol + " Outdated", ConsoleColor.Red);
             else
-                Logger.WriteLine("✓ Up-to-date", ConsoleColor.Green);
+                Logger.WriteLine(upToDateSymbol + " Up-to-date", ConsoleColor.Green);
         }
         catch(Exception e) {
             Logger.WriteLine("Error while parsing version, exception: " + e, ConsoleColor.Red);
@@ -122,9 +131,9 @@ public class Program {
                 try {
                     latest = new Version(index.latest); local = new Version(item.version);
                     if(Version.IsOutdated(latest, local))
-                        Logger.WriteLine("✗ Outdated", ConsoleColor.Red);
+                        Logger.WriteLine(outdatedSymbol + " Outdated", ConsoleColor.Red);
                     else
-                        Logger.WriteLine("✓ Up-to-date", ConsoleColor.Green);
+                        Logger.WriteLine(upToDateSymbol + " Up-to-date", ConsoleColor.Green);
                 }
                 catch(Exception e) {
                     Logger.WriteLine("Error while parsing version, exception: " + e, ConsoleColor.Red);
@@ -156,7 +165,7 @@ public class Program {
             Logger.Write("User:       ", ConsoleColor.DarkBlue); Logger.WriteLine(repository.user, ConsoleColor.White);
             Logger.Write("Path:       ", ConsoleColor.DarkBlue); Logger.WriteLine(repository.path, ConsoleColor.White);
         }
-        if(repository.path == "./" || repository.path == "." || repository.path == "\\.") repository.path = null;
+        if(repository.path == "./" || repository.path == "." || repository.path == ".\\") repository.path = null;
         //Downloading the index
         if(!Client.DownloadIndex(repository.user, repository.repository)) {
             Logger.WriteLine("Error, either the repository doesn't have a github-updater." + repository.repository + ".json file, "
@@ -230,12 +239,11 @@ public class Program {
         }
         Logger.WriteLine("(The indexes are local and might be outdated)", ConsoleColor.Yellow);
         //Asking if the user wants to update everything
-        bool updateEverything;
         if(args.everything == null || args.everything == false) {
-            Logger.Write("Do you want to update everything wothout confirmation? [Y/n]: ", ConsoleColor.DarkBlue);
-            updateEverything = Logger.ReadYesNo();
+            Logger.Write("Do you want to update everything without confirmation? [Y/n]: ", ConsoleColor.DarkBlue);
+            upgradeEverything = Logger.ReadYesNo();
         }
-        else updateEverything = true;
+        else upgradeEverything = true;
         Logger.WriteLine();
         //github-updater repository
         if(repositories.updater == null || repositories.updater.repository == null) return;
@@ -249,24 +257,32 @@ public class Program {
         try {
             latest = new Version(index.latest); local = new Version(repositories.updater.version);
             if(Version.IsOutdated(latest, local)) {
-                Logger.WriteLine("✗ Outdated", ConsoleColor.Red);
+                Logger.WriteLine(outdatedSymbol + " Outdated", ConsoleColor.Red);
                 outdated = true;
             }
             else
-                Logger.WriteLine("✓ Up-to-date", ConsoleColor.Green);
+                Logger.WriteLine(upToDateSymbol + " Up-to-date", ConsoleColor.Green);
         }
         catch(Exception e) {
             Logger.WriteLine("Error while parsing version, exception: " + e, ConsoleColor.Red);
         }
         //Updating
         if(outdated) {
-            if(!updateEverything) {
+            if(!upgradeEverything) {
                 Logger.Write("  Do you want to update it to the latest version? [Y/n]: ", ConsoleColor.DarkBlue);
                 update = Logger.ReadYesNo();
             }
-            if(updateEverything || update) {
+            if(upgradeEverything || update) {
                 Repository temp = repositories.updater;
-                try {Client.DownloadRelease(ref temp, index, true);}
+                try {
+                    Client.DownloadRelease(ref temp, index, true);
+                    if(exitingBecauseUpgrading){
+                        //Updating repositories index
+                        try {JsonManager.WriteRepositoriesIndex(repositories);}
+                        catch(Exception e) {Logger.WriteLine(e.ToString(), ConsoleColor.Red);}
+                        return;
+                    }
+                }
                 catch(Exception e) {Logger.WriteLine("Error while downloading release, exception: " + e, ConsoleColor.Red);}
                 repositories.updater = temp;
             }
@@ -293,22 +309,22 @@ public class Program {
                     try {
                         latest = new Version(index.latest); local = new Version(item.version);
                         if(Version.IsOutdated(latest, local)) {
-                            Logger.WriteLine("✗ Outdated", ConsoleColor.Red);
+                            Logger.WriteLine(outdatedSymbol + " Outdated", ConsoleColor.Red);
                             outdated = true;
                         }
                         else
-                            Logger.WriteLine("✓ Up-to-date", ConsoleColor.Green);
+                            Logger.WriteLine(upToDateSymbol + " Up-to-date", ConsoleColor.Green);
                     }
                     catch(Exception e) {
                         Logger.WriteLine("Error while parsing version, exception: " + e, ConsoleColor.Red);
                     }
                     //Updating
                     if(outdated) {
-                        if(!updateEverything) {
+                        if(!upgradeEverything) {
                             Logger.Write("  Do you want to update it to the latest version? [Y/n]: ", ConsoleColor.DarkBlue);
                             update = Logger.ReadYesNo();
                         }
-                        if(updateEverything || update) {
+                        if(upgradeEverything || update) {
                             Repository temp = item;
                             try {Client.DownloadRelease(ref temp, index, true);}
                             catch(Exception e) {Logger.WriteLine("Error while downloading release, exception: " + e, ConsoleColor.Red);}
