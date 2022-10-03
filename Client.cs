@@ -310,6 +310,7 @@ public class Client {
                 keep = keep.Append("MonoPosixHelper.dll").ToArray();
                 keep = keep.Append("libMonoPosixHelper.dll").ToArray();
                 keep = keep.Append("libMonoPosixHelper.so").ToArray();
+                keep = keep.Append("System.Diagnostics.*").ToArray();
             }
             string[] filesToKeep = GetFilesToKeep(path, keep, enumOptions);
             filesToDelete = Directory.GetFileSystemEntries(path, "*", enumOptions).Except(filesToKeep).Reverse().ToArray();
@@ -384,8 +385,8 @@ public class Client {
                 }
             }
             batFile.WriteLine("ECHO \"Succesfully upgraded\"");
-            batFile.WriteLine(".\\", self, (Program.upgradeEverything ? " e" : ""));
-            batFile.WriteLine("DEL \"%~f0\""); 
+            batFile.WriteLine(".\\ {0}{1}", self, (Program.upgradeEverything ? " e" : ""));
+            batFile.WriteLine("DEL /Q \"%~f0\" > NUL"); 
             batFile.WriteLine("CLS");
             batFile.Close();
             ProcessStartInfo startInfo = new ProcessStartInfo("upgrade.bat");
