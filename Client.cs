@@ -385,8 +385,7 @@ public class Client {
                 }
             }
             batFile.WriteLine("ECHO \"Succesfully upgraded\"");
-            batFile.WriteLine(".\\{0}{1}", self, (Program.upgradeEverything ? " e" : ""));
-            batFile.WriteLine("DEL /Q \"%~f0\" > NUL & CLS"); 
+            batFile.WriteLine("DEL /Q \"%~f0\" > NUL & ECHO \"Warning: Succesfully updgraded github-updater, run 'upgrade' command again to upgrade the other installations!\"");
             batFile.Close();
             ProcessStartInfo startInfo = new ProcessStartInfo("upgrade.bat");
             startInfo.WorkingDirectory = GetFullPathFromExecutable();

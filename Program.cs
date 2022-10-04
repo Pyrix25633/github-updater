@@ -2,7 +2,7 @@ using System;
 
 public class Program {
     public static string version = "1.0.0";
-    public static bool upgradeEverything = false, exitingBecauseUpgrading = false;
+    public static bool exitingBecauseUpgrading = false;
     public static string outdatedSymbol = "", upToDateSymbol = "";
     static void Main(string[] args) {
         //Version
@@ -239,6 +239,7 @@ public class Program {
         }
         Logger.WriteLine("(The indexes are local and might be outdated)", ConsoleColor.Yellow);
         //Asking if the user wants to update everything
+        bool upgradeEverything = false;
         if(args.everything == null || args.everything == false) {
             Logger.Write("Do you want to update everything without confirmation? [Y/n]: ", ConsoleColor.DarkBlue);
             upgradeEverything = Logger.ReadYesNo();

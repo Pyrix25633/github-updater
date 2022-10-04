@@ -8,6 +8,8 @@ COPY *.cs ./
 COPY launch-compilation.sh ./
 RUN chmod +x /app/launch-compilation.sh
 RUN dotnet add package Newtonsoft.Json
+RUN dotnet add package SharpZipLib
+RUN dotnet add package Mono.Posix.NETStandard
 RUN dotnet restore
 
 CMD [ "/app/launch-compilation.sh" ]
