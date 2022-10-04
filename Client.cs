@@ -385,9 +385,8 @@ public class Client {
                 }
             }
             batFile.WriteLine("ECHO \"Succesfully upgraded\"");
-            batFile.WriteLine(".\\ {0}{1}", self, (Program.upgradeEverything ? " e" : ""));
-            batFile.WriteLine("DEL /Q \"%~f0\" > NUL"); 
-            batFile.WriteLine("CLS");
+            batFile.WriteLine(".\\{0}{1}", self, (Program.upgradeEverything ? " e" : ""));
+            batFile.WriteLine("DEL /Q \"%~f0\" > NUL & CLS"); 
             batFile.Close();
             ProcessStartInfo startInfo = new ProcessStartInfo("upgrade.bat");
             startInfo.WorkingDirectory = GetFullPathFromExecutable();

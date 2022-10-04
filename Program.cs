@@ -1,7 +1,7 @@
 using System;
 
 public class Program {
-    public static string version = "0.0.1";
+    public static string version = "1.0.0";
     public static bool upgradeEverything = false, exitingBecauseUpgrading = false;
     public static string outdatedSymbol = "", upToDateSymbol = "";
     static void Main(string[] args) {
@@ -73,7 +73,7 @@ public class Program {
         Logger.WriteLine("  p, upgrade <\"e\"/\"everything\">                                                      Upgrade installations         ", ConsoleColor.Yellow);
         Logger.WriteLine("     Optional arguments:                                                                                           ", ConsoleColor.Yellow);
         Logger.WriteLine("      \"e\"/\"everything\" = Upgrade everything without asking for confirmation                                        ", ConsoleColor.Yellow);
-        Logger.WriteLine("  r, remove <(repository)>                                                           Removes an installation       ", ConsoleColor.Yellow);
+        Logger.WriteLine("  r, remove <(repository)>                                                           Remove an installation        ", ConsoleColor.Yellow);
         Logger.WriteLine("     Optional arguments:                                                                                           ", ConsoleColor.Yellow);
         Logger.WriteLine("      (repository) = Repository name                                                                               ", ConsoleColor.Yellow);
         Logger.WriteLine("<> = Optional argument                                                                                             ", ConsoleColor.Cyan);
